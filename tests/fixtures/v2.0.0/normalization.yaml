@@ -1,0 +1,76 @@
+$schema: https://schemas.fulmenhq.dev/library/foundry/v2.0.0/similarity.schema.json
+version: 2025.10.3
+notes: |
+  Normalization preset test cases
+  Tests none, minimal, default, and aggressive normalization modes
+  Reference implementations: strsim 0.11.x (Rust), rapidfuzz 3.x (Python)
+test_cases:
+  - category: normalization_presets
+    cases:
+      - input: '  Hello  '
+        preset: none
+        expected: '  Hello  '
+        description: No normalization (unchanged)
+        tags:
+          - none
+      - input: '  Café-Zürich!  '
+        preset: minimal
+        expected: Café-Zürich!
+        description: 'Minimal: NFC + trim'
+        tags:
+          - minimal
+          - unicode
+      - input: '  Café-Zürich!  '
+        preset: default
+        expected: café-zürich!
+        description: 'Default: NFC + casefold + trim'
+        tags:
+          - default
+          - unicode
+      - input: '  Café-Zürich!  '
+        preset: aggressive
+        expected: cafezurich
+        description: 'Aggressive: NFKD + casefold + strip accents + remove punctuation + trim'
+        tags:
+          - aggressive
+          - unicode
+      - input: İstanbul
+        preset: default
+        expected: i̇stanbul
+        description: Turkish dotted I (Unicode casefold)
+        tags:
+          - turkish
+          - locale
+      - input: naïve
+        preset: aggressive
+        expected: naive
+        description: Accent stripping (ï -> i)
+        tags:
+          - accent
+          - aggressive
+      - input: Hello, World!
+        preset: aggressive
+        expected: hello world
+        description: Punctuation removal
+        tags:
+          - punctuation
+          - aggressive
+      - input: "Line 1\r\n\nLine 2"
+        preset: default
+        expected: "line 1\r\n\nline 2"
+        description: Preserve CRLF while casefolding
+        tags:
+          - multiline
+          - line_endings
+      - input: "Line 1\n\nLine 2"
+        preset: none
+        expected: "Line 1\n\nLine 2"
+        description: Preserve multi-line with no normalization
+        tags:
+          - multiline
+      - input: "Line 1\n\nLine 2"
+        preset: aggressive
+        expected: "line 1\n\nline 2"
+        description: Multi-line aggressive normalization preserves newlines
+        tags:
+          - multiline

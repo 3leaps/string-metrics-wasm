@@ -1,0 +1,161 @@
+$schema: https://schemas.fulmenhq.dev/library/foundry/v2.0.0/similarity.schema.json
+version: 2025.10.3
+notes: |
+  Core similarity metrics test cases
+  Reference implementations: strsim 0.11.x (Rust), rapidfuzz 3.x (Python)
+test_cases:
+  - category: levenshtein
+    cases:
+      - input_a: ''
+        input_b: ''
+        expected_distance: 0
+        expected_score: 1.0
+        description: Empty strings (identity)
+        tags:
+          - edge_case
+      - input_a: hello
+        input_b: hello
+        expected_distance: 0
+        expected_score: 1.0
+        description: Identical strings
+        tags:
+          - identity
+      - input_a: kitten
+        input_b: sitting
+        expected_distance: 3
+        expected_score: 0.5714285714285714
+        description: Classic Levenshtein example
+        tags:
+          - standard
+      - input_a: Hello
+        input_b: hello
+        expected_distance: 1
+        expected_score: 0.8
+        description: Case difference (single substitution)
+        tags:
+          - case
+  - category: damerau_osa
+    cases:
+      - input_a: abcd
+        input_b: abdc
+        expected_distance: 1
+        expected_score: 0.75
+        description: Basic transposition (cd -> dc)
+        tags:
+          - transposition
+      - input_a: hello
+        input_b: ehllo
+        expected_distance: 1
+        expected_score: 0.8
+        description: Transposition at start (he -> eh)
+        tags:
+          - transposition
+      - input_a: algorithm
+        input_b: lagorithm
+        expected_distance: 1
+        expected_score: 0.8888888888888888
+        description: Transposition + other edits
+        tags:
+          - transposition
+          - combined
+      - input_a: abcd
+        input_b: acbd
+        expected_distance: 1
+        expected_score: 0.75
+        description: Non-adjacent swap (requires 2 substitutions)
+        tags:
+          - transposition
+          - non_adjacent
+      - input_a: CA
+        input_b: ABC
+        expected_distance: 3
+        expected_score: 0.0
+        description: 'OSA distinction: requires delete C + insert A + insert B (dist=3), unrestricted=2'
+        tags:
+          - osa_distinction
+          - critical
+  - category: damerau_unrestricted
+    cases:
+      - input_a: abcd
+        input_b: abdc
+        expected_distance: 1
+        expected_score: 0.75
+        description: Basic transposition (both variants agree)
+        tags:
+          - transposition
+          - baseline
+      - input_a: hello
+        input_b: ehllo
+        expected_distance: 1
+        expected_score: 0.8
+        description: Transposition at start (both variants agree)
+        tags:
+          - transposition
+          - baseline
+      - input_a: kitten
+        input_b: sitting
+        expected_distance: 3
+        expected_score: 0.5714285714285714
+        description: No transpositions, standard edits (both variants agree)
+        tags:
+          - standard
+          - baseline
+      - input_a: CA
+        input_b: ABC
+        expected_distance: 2
+        expected_score: 0.33333333333333337
+        description: 'Unrestricted distinction: allows transpose+insert (dist=2), OSA requires 3 ops'
+        tags:
+          - unrestricted_distinction
+          - critical
+      - input_a: algorithm
+        input_b: lagorithm
+        expected_distance: 1
+        expected_score: 0.8888888888888888
+        description: Transposition + other edits (both variants agree)
+        tags:
+          - transposition
+          - combined
+      - input_a: ''
+        input_b: ''
+        expected_distance: 0
+        expected_score: 1.0
+        description: Empty strings (identity, both variants agree)
+        tags:
+          - edge_case
+          - baseline
+  - category: jaro_winkler
+    cases:
+      - input_a: martha
+        input_b: marhta
+        expected_score: 0.9611111111111111
+        description: Classic Jaro-Winkler example
+        tags:
+          - standard
+      - input_a: dixon
+        input_b: dicksonx
+        expected_score: 0.8133333333333332
+        description: Name matching with prefix
+        tags:
+          - prefix
+          - names
+      - input_a: schema
+        input_b: schemas
+        expected_score: 0.9714285714285714
+        description: Common prefix, different suffix
+        tags:
+          - prefix
+          - cli
+      - input_a: test
+        input_b: text
+        expected_score: 0.8666666666666667
+        description: Short strings with typo
+        tags:
+          - typo
+          - short
+      - input_a: hello
+        input_b: world
+        expected_score: 0.4666666666666666
+        description: Completely different strings
+        tags:
+          - edge_case

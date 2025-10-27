@@ -1,0 +1,32 @@
+$schema: https://schemas.fulmenhq.dev/library/foundry/v2.0.0/similarity.schema.json
+version: 2025.10.3
+notes: |
+  Unicode edge cases: emoji, CJK, accents, locale-specific characters
+  Reference implementations: strsim 0.11.x (Rust), rapidfuzz 3.x (Python)
+test_cases:
+  - category: levenshtein
+    cases:
+      - input_a: café
+        input_b: cafe
+        expected_distance: 1
+        expected_score: 0.75
+        description: Accent difference
+        tags:
+          - unicode
+          - accent
+      - input_a: Hello🔥World
+        input_b: HelloWorld
+        expected_distance: 1
+        expected_score: 0.9090909090909091
+        description: Emoji deletion
+        tags:
+          - emoji
+          - unicode
+      - input_a: 日本語
+        input_b: 日本
+        expected_distance: 1
+        expected_score: 0.6666666666666666
+        description: CJK character deletion
+        tags:
+          - cjk
+          - unicode

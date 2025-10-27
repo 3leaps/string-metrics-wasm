@@ -1,0 +1,38 @@
+# Source control
+.git/
+.gitignore
+.github/
+
+# Build artifacts (Rust)
+target/
+*.rs.bk
+
+# Development
+node_modules/
+.claude/
+.vscode/
+.idea/
+
+# Tests (available in repo, not needed in published package)
+tests/
+coverage/
+
+# Build tooling
+Makefile
+tsconfig.json
+biome.json
+.prettierrc.json
+.prettierignore
+
+# Planning and internal docs (keep docs/ for users)
+.plans/
+
+# Logs and temp files
+*.log
+npm-debug.log*
+*.tmp
+.DS_Store
+Thumbs.db
+
+# Lock files (package will use consumer's versions)
+package-lock.json

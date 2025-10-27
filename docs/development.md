@@ -1,0 +1,117 @@
+# Development Guide
+
+This document explains how to work on `string-metrics-wasm`, the Rust/TypeScript hybrid library that
+wraps [`strsim`](https://docs.rs/strsim/latest/strsim/) for high-performance string metrics across
+Node, Deno, and Bun.
+
+> **Maintainers:** For release workflow and publishing to npm, see [publishing.md](publishing.md).
+
+## Toolchain & Bootstrap
+
+- **Rust**: Install the stable toolchain via [rustup](https://rustup.rs/).
+- **wasm-pack**: Required for producing the WebAssembly package. We target `0.13.1`.
+  ```bash
+  cargo install wasm-pack --version 0.13.1
+  ```
+- **Node.js**: v18+ (used for builds, tests, and packaging).
+
+Run the project bootstrap once per checkout:
+
+```bash
+make bootstrap
+```
+
+This verifies `cargo`, installs/updates `wasm-pack@0.13.1`, and installs npm dependencies.
+
+### Quick Reference
+
+Run `make help` to see all available Makefile targets:
+
+```bash
+make help
+```
+
+This displays organized sections for build targets, code quality, and version management commands.
+
+## Project Layout
+
+| Path           | Purpose                                                                |
+| -------------- | ---------------------------------------------------------------------- |
+| `src/lib.rs`   | Rust side: exported WASM bindings and normalization helpers.           |
+| `pkg/`         | Generated output from `wasm-pack` (Node/bundler entry points + wasm).  |
+| `src/index.ts` | TypeScript facade, higher-level APIs (normalization presets, suggest). |
+| `tests/`       | Vitest suite plus versioned Fulmen similarity fixtures (`fixtures/*`). |
+| `schemas/`     | JSON schema describing fixture structure and similarity expectations.  |
+
+## Builds & Testing
+
+- Rebuild the WebAssembly package:
+  ```bash
+  npm run build:wasm
+  ```
+- Compile TypeScript outputs:
+  ```bash
+  npm run build:ts
+  ```
+- Full build (Rust + TS):
+  ```bash
+  make build
+  ```
+- Test suite (will rebuild first):
+  ```bash
+  make test
+  ```
+
+Tests validate both the Rust bindings and the TypeScript helpers against shared fixtures, and assert
+version synchronization between `Cargo.toml` and `package.json`.
+
+## Version & Release Hygiene
+
+- Use the Makefile helpers (`make bump-*` or `make set-version`) to keep Rust/npm versions aligned.
+- The published npm package includes:
+  - `dist/` - Compiled TypeScript outputs
+  - `pkg/` - WASM binaries and JS bindings from wasm-pack
+  - `src/` - Source code (Rust + TypeScript) for reference
+  - `docs/` - User and developer documentation
+  - `LICENSE`, `README.md`, `Cargo.toml` - Metadata
+- The published package **excludes** `tests/`, `.plans/`, and build tooling (Makefile, config
+  files). Tests and fixtures are available in the
+  [GitHub repository](https://github.com/3leaps/string-metrics-wasm).
+- Before publishing, `prepublishOnly` runs `make quality && make build` to ensure quality checks
+  pass and artifacts are fresh.
+- Keep `wasm-pack` at `0.13.x` to avoid drift between local builds and CI.
+
+## Fixture Validation
+
+This project includes a Rust-based validation tool (`similarity-validator`) that validates test
+fixtures against the canonical strsim-rs implementation:
+
+```bash
+make build-validator      # Build the validator tool
+make validate-fixtures    # Validate all fixtures
+```
+
+Fixtures are organized by topic in `tests/fixtures/v2.0.0/`:
+
+- `basic.yaml` - Core Levenshtein, Damerau (both variants), Jaro-Winkler
+- `unicode.yaml` - Emoji, CJK, accents, locale-specific characters
+- `multiline.yaml` - Newlines, CRLF, line endings
+- `normalization.yaml` - Normalization preset test cases
+- `substring.yaml` - Substring similarity (LCS-based)
+- `suggestions.yaml` - Suggestion API test cases
+
+See [`similarity-validator/README.md`](../similarity-validator/README.md) for tool documentation.
+
+## Contributing Tips
+
+- Prefer updating shared fixtures in `tests/fixtures/v2.0.0/` when adding metrics or normalization
+  presets so all languages stay aligned.
+- Run `make validate-fixtures` after modifying fixtures to ensure accuracy.
+- Run `make quality` before opening a PR; it executes formatting, linting, and Rust checks
+  consistently.
+- When touching Rust exports, regenerate the wasm bundle and ensure the TypeScript facade re-exports
+  any new APIs.
+- Document new APIs in `README.md` and add targeted tests, especially for Unicode and non-Latin
+  coverage.
+
+For deeper background on the overall mission and naming, check `.plans/` in the repo root.

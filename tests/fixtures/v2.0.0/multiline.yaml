@@ -1,0 +1,30 @@
+$schema: https://schemas.fulmenhq.dev/library/foundry/v2.0.0/similarity.schema.json
+version: 2025.10.3
+notes: |
+  Multiline string handling and line ending edge cases
+  Reference implementations: strsim 0.11.x (Rust), rapidfuzz 3.x (Python)
+test_cases:
+  - category: levenshtein
+    cases:
+      - input_a: "Line1\nLine2"
+        input_b: 'Line1 Line2'
+        expected_distance: 1
+        expected_score: 0.9090909090909091
+        description: Newline substitution
+        tags:
+          - multiline
+      - input_a: "text\r\n"
+        input_b: "text\n"
+        expected_distance: 1
+        expected_score: 0.8333333333333334
+        description: CRLF vs LF difference
+        tags:
+          - multiline
+          - line_endings
+      - input_a: "line1\nline2"
+        input_b: "line1\nline2"
+        expected_distance: 0
+        expected_score: 1.0
+        description: Identical multi-line strings
+        tags:
+          - multiline

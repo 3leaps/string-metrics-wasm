@@ -1,0 +1,65 @@
+{
+  "name": "string-metrics-wasm",
+  "version": "0.1.0",
+  "description": "High-performance string similarity metrics via WASM bindings to strsim-rs",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist",
+    "pkg",
+    "src",
+    "docs",
+    "LICENSE",
+    "README.md",
+    "Cargo.toml"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build:wasm": "wasm-pack build --target web --out-dir pkg/web",
+    "build:ts": "tsc",
+    "build": "npm run build:wasm && npm run build:ts",
+    "pretest": "make version-check",
+    "test": "vitest --run",
+    "test:watch": "vitest",
+    "bench": "node bench.js",
+    "version:check": "make version-check",
+    "version:sync": "make version-sync",
+    "lint": "biome lint src/",
+    "lint:fix": "biome lint --write src/",
+    "format": "biome format src/ && prettier --write '**/*.{json,yaml,yml,md}'",
+    "format:check": "biome format src/ && prettier --check '**/*.{json,yaml,yml,md}'",
+    "quality": "make quality",
+    "prepublishOnly": "make quality && make build"
+  },
+  "keywords": [
+    "wasm",
+    "string",
+    "similarity",
+    "levenshtein",
+    "jaro-winkler"
+  ],
+  "author": "3leaps",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/3leaps/string-metrics-wasm.git"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.0.0",
+    "@types/js-yaml": "^4.0.9",
+    "@types/node": "^20.19.23",
+    "@vitest/browser": "^1.0.0",
+    "js-yaml": "^4.1.0",
+    "prettier": "^3.6.0",
+    "typescript": "^5.0.0",
+    "vitest": "^1.0.0",
+    "wasm-pack": "^0.13.0"
+  }
+}

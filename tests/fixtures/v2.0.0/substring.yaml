@@ -1,0 +1,62 @@
+$schema: https://schemas.fulmenhq.dev/library/foundry/v2.0.0/similarity.schema.json
+version: 2025.10.3
+notes: |
+  Substring similarity test cases (LCS-based)
+  Reference implementations: strsim 0.11.x (Rust), rapidfuzz 3.x (Python)
+test_cases:
+  - category: substring
+    cases:
+      - needle: hello
+        haystack: hello world
+        expected_score: 0.4545454545454545
+        expected_range:
+          start: 0
+          end: 5
+        description: Prefix match
+        tags:
+          - prefix
+      - needle: world
+        haystack: hello world
+        expected_score: 0.4545454545454545
+        expected_range:
+          start: 6
+          end: 11
+        description: Suffix match
+        tags:
+          - suffix
+      - needle: schemas
+        haystack: schemas/foundry/patterns.yaml
+        expected_score: 0.2413793103448276
+        expected_range:
+          start: 0
+          end: 7
+        description: Path component match
+        tags:
+          - path
+          - partial
+      - needle: foundry
+        haystack: schemas/foundry/patterns.yaml
+        expected_score: 0.2413793103448276
+        expected_range:
+          start: 8
+          end: 15
+        description: Middle path component
+        tags:
+          - path
+          - middle
+      - needle: test
+        haystack: this is a test case
+        expected_score: 0.2105263157894737
+        expected_range:
+          start: 10
+          end: 14
+        description: Word in sentence
+        tags:
+          - sentence
+      - needle: xyz
+        haystack: abcdef
+        expected_score: 0.0
+        description: No common substring
+        tags:
+          - edge_case
+          - no_match

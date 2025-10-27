@@ -1,0 +1,85 @@
+$schema: https://schemas.fulmenhq.dev/library/foundry/v2.0.0/similarity.schema.json
+version: 2025.10.3
+notes: |
+  Suggestion API test cases
+  Tests metric selection, normalization, and ranking
+  Reference implementations: strsim 0.11.x (Rust), rapidfuzz 3.x (Python)
+test_cases:
+  - category: suggestions
+    cases:
+      - input: docscrib
+        candidates:
+          - docscribe
+          - crucible-shim
+          - config-path-api
+          - foundry
+        options:
+          min_score: 0.6
+          max_suggestions: 3
+          metric: levenshtein
+          normalize_preset: default
+        expected:
+          - value: docscribe
+            score: 0.8888888888888888
+        description: CLI typo correction
+        tags:
+          - cli
+          - typo
+      - input: schem
+        candidates:
+          - schemas
+          - schema-validation
+          - config-path-api
+        options:
+          min_score: 0.5
+          max_suggestions: 2
+          metric: substring
+          normalize_preset: default
+        expected:
+          - value: schemas
+            score: 0.7142857142857143
+        description: Partial path matching
+        tags:
+          - path
+          - substring
+      - input: Café
+        candidates:
+          - café
+          - cache
+          - config
+        options:
+          min_score: 0.6
+          max_suggestions: 2
+          metric: levenshtein
+          normalize_preset: aggressive
+        expected:
+          - value: café
+            score: 1.0
+          - value: cache
+            score: 0.6
+        description: Normalization impact on suggestions
+        tags:
+          - normalization
+          - unicode
+      - input: test
+        candidates:
+          - testing
+          - tested
+          - best
+        options:
+          min_score: 0.6
+          max_suggestions: 3
+          metric: jaro_winkler
+          normalize_preset: default
+          prefer_prefix: true
+        expected:
+          - value: tested
+            score: 0.9333333333333333
+          - value: testing
+            score: 0.9142857142857143
+          - value: best
+            score: 0.8333333333333334
+        description: Jaro-Winkler with prefix preference
+        tags:
+          - jaro_winkler
+          - prefix
