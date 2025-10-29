@@ -3,7 +3,7 @@ members = [".", "similarity-validator"]
 
 [package]
 name = "string-metrics-wasm"
-version = "0.1.0"
+version = "0.2.0-dev"
 edition = "2021"
 description = "WASM bindings for high-performance string similarity metrics"
 license = "MIT"
@@ -13,7 +13,7 @@ repository = "https://github.com/3leaps/string-metrics-wasm"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-strsim = "0.11"
+rapidfuzz = "0.5"
 unicode-normalization = "0.1"
 unicode_categories = "0.1.1"
 wasm-bindgen = "0.2"

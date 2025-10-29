@@ -5,56 +5,50 @@ use wasm_bindgen::prelude::*;
 // Levenshtein distance
 #[wasm_bindgen]
 pub fn levenshtein(a: &str, b: &str) -> usize {
-    strsim::levenshtein(a, b)
+    rapidfuzz::distance::levenshtein::distance(a.chars(), b.chars())
 }
 
 // Normalized Levenshtein similarity
 #[wasm_bindgen]
 pub fn normalized_levenshtein(a: &str, b: &str) -> f64 {
-    strsim::normalized_levenshtein(a, b)
+    rapidfuzz::distance::levenshtein::normalized_similarity(a.chars(), b.chars())
 }
 
 // Optimal String Alignment (OSA) distance (restricted Damerau-Levenshtein)
 #[wasm_bindgen]
 pub fn osa_distance(a: &str, b: &str) -> usize {
-    strsim::osa_distance(a, b)
+    rapidfuzz::distance::osa::distance(a.chars(), b.chars())
 }
 
 // Normalized OSA similarity
 #[wasm_bindgen]
 pub fn normalized_osa_similarity(a: &str, b: &str) -> f64 {
-    let dist = strsim::osa_distance(a, b) as f64;
-    let max_len = a.chars().count().max(b.chars().count()) as f64;
-    if max_len == 0.0 {
-        1.0
-    } else {
-        1.0 - dist / max_len
-    }
+    rapidfuzz::distance::osa::normalized_similarity(a.chars(), b.chars())
 }
 
 // Damerau-Levenshtein distance (unrestricted)
 #[wasm_bindgen]
 pub fn damerau_levenshtein(a: &str, b: &str) -> usize {
-    strsim::damerau_levenshtein(a, b)
+    rapidfuzz::distance::damerau_levenshtein::distance(a.chars(), b.chars())
 }
 
 // Normalized Damerau-Levenshtein similarity
 #[wasm_bindgen]
 pub fn normalized_damerau_levenshtein(a: &str, b: &str) -> f64 {
-    strsim::normalized_damerau_levenshtein(a, b)
+    rapidfuzz::distance::damerau_levenshtein::normalized_similarity(a.chars(), b.chars())
 }
 
 // Jaro similarity
 #[wasm_bindgen]
 pub fn jaro(a: &str, b: &str) -> f64 {
-    strsim::jaro(a, b)
+    rapidfuzz::distance::jaro::similarity(a.chars(), b.chars())
 }
 
 #[wasm_bindgen]
 pub fn jaro_winkler_with_params(a: &str, b: &str, prefix_scale: f64, max_prefix: usize) -> f64 {
     let clamped_scale = prefix_scale.clamp(0.0, 0.25);
     let clamped_max = max_prefix.clamp(1, 8);
-    let jaro_score = strsim::jaro(a, b);
+    let jaro_score = rapidfuzz::distance::jaro::similarity(a.chars(), b.chars());
     if jaro_score == 1.0 {
         return 1.0;
     }
@@ -78,7 +72,7 @@ pub fn jaro_winkler_with_params(a: &str, b: &str, prefix_scale: f64, max_prefix:
 // Jaro-Winkler similarity
 #[wasm_bindgen]
 pub fn jaro_winkler(a: &str, b: &str) -> f64 {
-    strsim::jaro_winkler(a, b)
+    rapidfuzz::distance::jaro_winkler::similarity(a.chars(), b.chars())
 }
 
 // Normalization function
