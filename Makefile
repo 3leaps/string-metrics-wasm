@@ -74,10 +74,12 @@ version-sync:
 	@PKG_VERSION=$$(node -p "require('./package.json').version"); \
 	if [ "$$(uname)" = "Darwin" ]; then \
 		sed -i '' "s/^version = .*/version = \"$$PKG_VERSION\"/" Cargo.toml; \
+		sed -i '' "s/^version = .*/version = \"$$PKG_VERSION\"/" similarity-validator/Cargo.toml; \
 	else \
 		sed -i "s/^version = .*/version = \"$$PKG_VERSION\"/" Cargo.toml; \
+		sed -i "s/^version = .*/version = \"$$PKG_VERSION\"/" similarity-validator/Cargo.toml; \
 	fi; \
-	echo "✅ Synced Cargo.toml to version $$PKG_VERSION"
+	echo "✅ Synced Cargo.toml and similarity-validator/Cargo.toml to version $$PKG_VERSION"
 
 bump-patch: version-check
 	@npm version patch --no-git-tag-version

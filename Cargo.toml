@@ -3,7 +3,7 @@ members = [".", "similarity-validator"]
 
 [package]
 name = "string-metrics-wasm"
-version = "0.2.0"
+version = "0.3.0"
 edition = "2021"
 description = "WASM bindings for high-performance string similarity metrics"
 license = "MIT"
