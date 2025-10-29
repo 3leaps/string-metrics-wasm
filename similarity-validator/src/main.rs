@@ -487,10 +487,11 @@ fn validate_suggestions(file: &str, category: &str, test: &TestCase) -> Validati
     // Normalize input
     let normalized_input = normalize(&input, normalize_preset);
 
-    // Compute scores for each candidate
-    let mut results: Vec<SuggestionResult> = candidates
+    // Compute scores for each candidate with original index for stable sorting
+    let mut results: Vec<(usize, SuggestionResult)> = candidates
         .iter()
-        .map(|candidate| {
+        .enumerate()
+        .map(|(idx, candidate)| {
             let normalized_candidate = normalize(candidate, normalize_preset);
             let (mut score, matched_range) =
                 compute_score_for_metric(&normalized_input, &normalized_candidate, metric);
@@ -502,26 +503,32 @@ fn validate_suggestions(file: &str, category: &str, test: &TestCase) -> Validati
                 score = (score + (1.0 - score) * bonus_weight).min(1.0);
             }
 
-            SuggestionResult {
-                value: candidate.clone(),
-                score,
-                matched_range,
-                normalized_value: normalized_candidate.clone(),
-            }
+            (
+                idx,
+                SuggestionResult {
+                    value: candidate.clone(),
+                    score,
+                    matched_range,
+                    normalized_value: normalized_candidate.clone(),
+                },
+            )
         })
-        .filter(|r| r.score >= min_score)
+        .filter(|(_, r)| r.score >= min_score)
         .collect();
 
-    // Sort by score (descending), then alphabetically for ties
-    results.sort_by(|a, b| {
+    // Sort by score (descending), preserving original order for ties
+    results.sort_by(|(idx_a, a), (idx_b, b)| {
         b.score
             .partial_cmp(&a.score)
             .unwrap_or(std::cmp::Ordering::Equal)
-            .then_with(|| a.value.cmp(&b.value))
+            .then_with(|| idx_a.cmp(idx_b))
     });
 
     // Truncate to max_suggestions
     results.truncate(max_suggestions);
+
+    // Extract just the results, discarding indices
+    let results: Vec<SuggestionResult> = results.into_iter().map(|(_, r)| r).collect();
 
     // Validate against expected
     let empty_vec = vec![];
@@ -896,10 +903,11 @@ fn generate_suggestions(case: &mut TestCase, overwrite: bool) -> bool {
     // Normalize input
     let normalized_input = normalize(&input, normalize_preset);
 
-    // Compute scores for each candidate
-    let mut results: Vec<SuggestionResult> = candidates
+    // Compute scores for each candidate with original index for stable sorting
+    let mut results: Vec<(usize, SuggestionResult)> = candidates
         .iter()
-        .map(|candidate| {
+        .enumerate()
+        .map(|(idx, candidate)| {
             let normalized_candidate = normalize(candidate, normalize_preset);
             let (mut score, matched_range) =
                 compute_score_for_metric(&normalized_input, &normalized_candidate, metric);
@@ -911,26 +919,32 @@ fn generate_suggestions(case: &mut TestCase, overwrite: bool) -> bool {
                 score = (score + (1.0 - score) * bonus_weight).min(1.0);
             }
 
-            SuggestionResult {
-                value: candidate.clone(),
-                score,
-                matched_range,
-                normalized_value: normalized_candidate.clone(),
-            }
+            (
+                idx,
+                SuggestionResult {
+                    value: candidate.clone(),
+                    score,
+                    matched_range,
+                    normalized_value: normalized_candidate.clone(),
+                },
+            )
         })
-        .filter(|r| r.score >= min_score)
+        .filter(|(_, r)| r.score >= min_score)
         .collect();
 
-    // Sort by score (descending), then alphabetically for ties
-    results.sort_by(|a, b| {
+    // Sort by score (descending), preserving original order for ties
+    results.sort_by(|(idx_a, a), (idx_b, b)| {
         b.score
             .partial_cmp(&a.score)
             .unwrap_or(std::cmp::Ordering::Equal)
-            .then_with(|| a.value.cmp(&b.value))
+            .then_with(|| idx_a.cmp(idx_b))
     });
 
     // Truncate to max_suggestions
     results.truncate(max_suggestions);
+
+    // Extract just the results, discarding indices
+    let results: Vec<SuggestionResult> = results.into_iter().map(|(_, r)| r).collect();
 
     // Convert to YAML format
     let suggestions: Vec<serde_yaml::Value> = results
