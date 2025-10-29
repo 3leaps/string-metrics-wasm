@@ -24,7 +24,6 @@ serde_json = "1.0"
 
 # Unicode normalization
 unicode-normalization = "0.1"
-deunicode = "1.4"
 
 # File operations and timestamps
 glob = "0.3"
