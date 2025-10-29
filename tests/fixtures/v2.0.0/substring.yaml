@@ -1,32 +1,49 @@
 $schema: https://schemas.fulmenhq.dev/library/foundry/v2.0.0/similarity.schema.json
 version: 2025.10.3
-notes: |
-  Substring similarity test cases (LCS-based)
-  Reference implementations: strsim 0.11.x (Rust), rapidfuzz 3.x (Python)
+generator:
+  tool: similarity-validator
+  tool_version: 0.1.0
+  source_library: rapidfuzz-rs
+  source_version: '3.0'
+  generated_at: 2025-10-27T18:06:09.478274+00:00
+  command: similarity-validator generate --input tests/fixtures/v2.0.0/substring.yaml --overwrite
+notes: |-
+  GENERATED FILE - DO NOT EDIT EXPECTED VALUES BY HAND
+
+  This fixture was generated using similarity-validator with rapidfuzz-rs as the
+  canonical source. Values are authoritative and ready for cross-language validation.
+
+  Reference implementations:
+  - Canonical: rapidfuzz-rs 3.x (Rust, used for generation)
+  - Cross-check: rapidfuzz 3.x (Python, pyfulmen)
+  - Under test: string-metrics-wasm (TypeScript/WASM)
+
+  To regenerate:
+  similarity-validator generate --input tests/fixtures/v2.0.0/substring.yaml --overwrite
 test_cases:
   - category: substring
     cases:
       - needle: hello
         haystack: hello world
-        expected_score: 0.4545454545454545
+        expected_score: 0.625
         expected_range:
           start: 0
           end: 5
         description: Prefix match
         tags:
           - prefix
-      - needle: world
-        haystack: hello world
-        expected_score: 0.4545454545454545
+      - haystack: hello world
+        needle: world
+        expected_score: 0.625
         expected_range:
           start: 6
           end: 11
         description: Suffix match
         tags:
           - suffix
-      - needle: schemas
-        haystack: schemas/foundry/patterns.yaml
-        expected_score: 0.2413793103448276
+      - haystack: schemas/foundry/patterns.yaml
+        needle: schemas
+        expected_score: 0.3888888888888889
         expected_range:
           start: 0
           end: 7
@@ -34,9 +51,9 @@ test_cases:
         tags:
           - path
           - partial
-      - needle: foundry
-        haystack: schemas/foundry/patterns.yaml
-        expected_score: 0.2413793103448276
+      - haystack: schemas/foundry/patterns.yaml
+        needle: foundry
+        expected_score: 0.3888888888888889
         expected_range:
           start: 8
           end: 15
@@ -46,7 +63,7 @@ test_cases:
           - middle
       - needle: test
         haystack: this is a test case
-        expected_score: 0.2105263157894737
+        expected_score: 0.34782608695652173
         expected_range:
           start: 10
           end: 14
