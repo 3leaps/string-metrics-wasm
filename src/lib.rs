@@ -109,3 +109,52 @@ pub fn normalize(s: &str, preset: &str) -> String {
         _ => s.to_string(),
     }
 }
+
+// ============================================================================
+// RapidFuzz Fuzz Module - Ratio-based similarity (0-100 scale)
+// ============================================================================
+
+/// Basic fuzzy string comparison using Indel distance
+/// Returns similarity score as percentage (0-100)
+///
+/// This is equivalent to (1 - normalized_indel_distance) * 100
+#[wasm_bindgen]
+pub fn ratio(a: &str, b: &str) -> f64 {
+    rapidfuzz::fuzz::ratio(a.chars(), b.chars())
+}
+
+// ============================================================================
+// RapidFuzz Distance Module - Additional metrics
+// ============================================================================
+
+/// Indel distance (insertion/deletion only, no substitutions)
+/// Similar to Levenshtein but only allows insertions and deletions
+#[wasm_bindgen]
+pub fn indel_distance(a: &str, b: &str) -> usize {
+    rapidfuzz::distance::indel::distance(a.chars(), b.chars())
+}
+
+/// Normalized Indel similarity (0.0-1.0)
+#[wasm_bindgen]
+pub fn indel_normalized_similarity(a: &str, b: &str) -> f64 {
+    rapidfuzz::distance::indel::normalized_similarity(a.chars(), b.chars())
+}
+
+/// Longest Common Subsequence (LCS) distance
+/// Counts minimum insertions+deletions to transform one string into another
+#[wasm_bindgen]
+pub fn lcs_seq_distance(a: &str, b: &str) -> usize {
+    rapidfuzz::distance::lcs_seq::distance(a.chars(), b.chars())
+}
+
+/// LCS similarity (count of matching characters)
+#[wasm_bindgen]
+pub fn lcs_seq_similarity(a: &str, b: &str) -> usize {
+    rapidfuzz::distance::lcs_seq::similarity(a.chars(), b.chars())
+}
+
+/// Normalized LCS similarity (0.0-1.0)
+#[wasm_bindgen]
+pub fn lcs_seq_normalized_similarity(a: &str, b: &str) -> f64 {
+    rapidfuzz::distance::lcs_seq::normalized_similarity(a.chars(), b.chars())
+}
