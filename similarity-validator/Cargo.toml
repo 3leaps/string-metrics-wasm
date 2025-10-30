@@ -2,7 +2,7 @@
 name = "similarity-validator"
 version = "0.3.0"
 edition = "2021"
-description = "CLI tool to validate similarity metrics fixtures against strsim-rs"
+description = "CLI tool to validate similarity metrics fixtures against rapidfuzz-rs"
 license = "MIT"
 
 [[bin]]

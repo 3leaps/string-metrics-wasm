@@ -17,6 +17,10 @@ node_modules/
 tests/
 coverage/
 
+# Similarity validator (dev tool, not for consumers)
+dist/similarity-validator*
+similarity-validator/
+
 # Build tooling
 Makefile
 tsconfig.json

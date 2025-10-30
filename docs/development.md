@@ -1,8 +1,8 @@
 # Development Guide
 
 This document explains how to work on `string-metrics-wasm`, the Rust/TypeScript hybrid library that
-wraps [`strsim`](https://docs.rs/strsim/latest/strsim/) for high-performance string metrics across
-Node, Deno, and Bun.
+wraps [`rapidfuzz`](https://docs.rs/rapidfuzz/latest/rapidfuzz/) for high-performance string metrics
+across Node, Deno, and Bun.
 
 > **Maintainers:** For release workflow and publishing to npm, see [publishing.md](publishing.md).
 
@@ -84,7 +84,7 @@ version synchronization between `Cargo.toml` and `package.json`.
 ## Fixture Validation
 
 This project includes a Rust-based validation tool (`similarity-validator`) that validates test
-fixtures against the canonical strsim-rs implementation:
+fixtures against the canonical rapidfuzz-rs implementation:
 
 ```bash
 make build-validator      # Build the validator tool

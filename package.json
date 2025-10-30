@@ -1,12 +1,13 @@
 {
   "name": "string-metrics-wasm",
   "version": "0.3.0",
-  "description": "High-performance string similarity metrics via WASM bindings to strsim-rs",
+  "description": "High-performance string similarity metrics via WASM bindings to rapidfuzz-rs",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "files": [
     "dist",
+    "!dist/similarity-validator*",
     "pkg",
     "src",
     "docs",

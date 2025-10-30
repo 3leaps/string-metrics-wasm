@@ -3,7 +3,7 @@ version: 2025.10.3
 notes: |
   Normalization preset test cases
   Tests none, minimal, default, and aggressive normalization modes
-  Reference implementations: strsim 0.11.x (Rust), rapidfuzz 3.x (Python)
+  Reference implementations: rapidfuzz 0.5.x (Rust), rapidfuzz 3.x (Python)
 test_cases:
   - category: normalization_presets
     cases:

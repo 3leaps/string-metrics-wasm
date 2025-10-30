@@ -1,14 +1,14 @@
 # Similarity Validator
 
-CLI tool to validate similarity metrics fixtures against the canonical strsim-rs implementation.
+CLI tool to validate similarity metrics fixtures against the canonical rapidfuzz-rs implementation.
 
 ## Purpose
 
 This tool ensures that:
 
 1. Test fixtures are valid and match the Crucible schema
-2. Expected values in fixtures match strsim-rs computations
-3. Cross-language compatibility is maintained (Python rapidfuzz ↔ Rust strsim)
+2. Expected values in fixtures match rapidfuzz-rs computations
+3. Cross-language compatibility is maintained (Python rapidfuzz ↔ Rust rapidfuzz)
 
 ## Building
 
