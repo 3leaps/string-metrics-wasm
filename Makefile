@@ -200,7 +200,7 @@ prepush:
 	@$(MAKE) test
 	@if [ -f "dist/similarity-validator" ]; then \
 		echo "📋 Validating fixtures..."; \
-		$(MAKE) validate-fixtures || echo "⚠️  Fixture validation failed (non-blocking)"; \
+		$(MAKE) validate-fixtures || { echo "⚠️  Fixture validation failed (non-blocking)"; true; }; \
 	fi
 	@echo "✅ All pre-push checks passed!"
 
