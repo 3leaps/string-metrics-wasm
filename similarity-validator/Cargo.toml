@@ -1,6 +1,6 @@
 [package]
 name = "similarity-validator"
-version = "0.3.2"
+version = "0.3.3"
 edition = "2021"
 description = "CLI tool to validate similarity metrics fixtures against rapidfuzz-rs"
 license = "MIT"

@@ -198,9 +198,8 @@ prepush:
 	@$(MAKE) quality
 	@$(MAKE) build
 	@$(MAKE) test
+	@$(MAKE) validate-fixtures
 	@echo "✅ All pre-push checks passed!"
-	@echo ""
-	@echo "💡 Optional: Run 'make validate-fixtures' to check fixture accuracy"
 
 # Fixture validation targets
 build-validator:
