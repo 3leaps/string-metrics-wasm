@@ -120,7 +120,8 @@ pub fn normalize(s: &str, preset: &str) -> String {
 /// This is equivalent to (1 - normalized_indel_distance) * 100
 #[wasm_bindgen]
 pub fn ratio(a: &str, b: &str) -> f64 {
-    rapidfuzz::fuzz::ratio(a.chars(), b.chars())
+    // rapidfuzz::fuzz::ratio returns 0-1, scale to 0-100 for Python compatibility
+    rapidfuzz::fuzz::ratio(a.chars(), b.chars()) * 100.0
 }
 
 // ============================================================================

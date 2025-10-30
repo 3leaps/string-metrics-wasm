@@ -9,6 +9,15 @@ type WasmBindings = {
   jaro_winkler(a: string, b: string): number;
   jaro_winkler_with_params(a: string, b: string, prefix_scale: number, max_prefix: number): number;
   normalize(input: string, preset: string): string;
+  // RapidFuzz fuzz module
+  ratio(a: string, b: string): number;
+  // RapidFuzz distance - Indel
+  indel_distance(a: string, b: string): number;
+  indel_normalized_similarity(a: string, b: string): number;
+  // RapidFuzz distance - LCS
+  lcs_seq_distance(a: string, b: string): number;
+  lcs_seq_similarity(a: string, b: string): number;
+  lcs_seq_normalized_similarity(a: string, b: string): number;
 };
 
 const loadWasm = async (): Promise<WasmBindings> => {

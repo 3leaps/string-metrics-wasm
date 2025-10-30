@@ -48,6 +48,351 @@ export function normalize(input: string, preset: NormalizationPreset = 'none'): 
   return wasm.normalize(input, preset);
 }
 
+// ============================================================================
+// RapidFuzz Fuzz Module - Ratio-based similarity (0-100 scale)
+// ============================================================================
+
+/**
+ * Basic fuzzy string comparison using Indel distance
+ * Returns similarity score as percentage (0-100)
+ */
+export function ratio(a: string, b: string): number {
+  return wasm.ratio(a, b);
+}
+
+// ============================================================================
+// RapidFuzz Distance Module - Indel metrics
+// ============================================================================
+
+/**
+ * Indel distance (insertion/deletion only, no substitutions)
+ * Returns the minimum number of insertions and deletions required
+ */
+export function indel_distance(a: string, b: string): number {
+  return wasm.indel_distance(a, b);
+}
+
+/**
+ * Normalized Indel similarity (0.0-1.0 scale)
+ */
+export function indel_normalized_similarity(a: string, b: string): number {
+  return wasm.indel_normalized_similarity(a, b);
+}
+
+// ============================================================================
+// RapidFuzz Distance Module - LCS (Longest Common Subsequence) metrics
+// ============================================================================
+
+/**
+ * LCS distance - number of characters that need to be added/removed
+ */
+export function lcs_seq_distance(a: string, b: string): number {
+  return wasm.lcs_seq_distance(a, b);
+}
+
+/**
+ * LCS similarity - length of the longest common subsequence
+ */
+export function lcs_seq_similarity(a: string, b: string): number {
+  return wasm.lcs_seq_similarity(a, b);
+}
+
+/**
+ * Normalized LCS similarity (0.0-1.0 scale)
+ */
+export function lcs_seq_normalized_similarity(a: string, b: string): number {
+  return wasm.lcs_seq_normalized_similarity(a, b);
+}
+
+// ============================================================================
+// Token-based Fuzzy Matching (TypeScript implementations)
+// ============================================================================
+
+/**
+ * Tokenize a string by splitting on whitespace
+ */
+const tokenize = (str: string): string[] => {
+  return str
+    .trim()
+    .split(/\s+/)
+    .filter((token) => token.length > 0);
+};
+
+/**
+ * Partial ratio - finds the best matching substring
+ * Uses sliding window to find the best match between strings
+ * Returns similarity score as percentage (0-100)
+ */
+export function partialRatio(a: string, b: string): number {
+  if (a.length === 0 || b.length === 0) {
+    return a === b ? 100 : 0;
+  }
+
+  // Make 'shorter' the shorter string and 'longer' the longer one
+  const [shorter, longer] = a.length <= b.length ? [a, b] : [b, a];
+
+  if (shorter.length === 0) return 0;
+
+  // If shorter string is contained in longer, compare them directly
+  if (longer.includes(shorter)) {
+    return ratio(shorter, shorter);
+  }
+
+  // Use sliding window to find best match
+  let maxRatio = 0;
+  const shorterLen = shorter.length;
+
+  for (let i = 0; i <= longer.length - shorterLen; i++) {
+    const substring = longer.substring(i, i + shorterLen);
+    const currentRatio = ratio(shorter, substring);
+    maxRatio = Math.max(maxRatio, currentRatio);
+  }
+
+  return maxRatio;
+}
+
+/**
+ * Token sort ratio - sorts tokens alphabetically before comparison
+ * Useful for order-insensitive comparison
+ * Returns similarity score as percentage (0-100)
+ */
+export function tokenSortRatio(a: string, b: string): number {
+  const tokensA = tokenize(a);
+  const tokensB = tokenize(b);
+
+  // Sort tokens alphabetically
+  const sortedA = tokensA.sort().join(' ');
+  const sortedB = tokensB.sort().join(' ');
+
+  return ratio(sortedA, sortedB);
+}
+
+/**
+ * Token set ratio - uses set operations on tokens for comparison
+ * Handles differences in token order and duplication
+ * Returns similarity score as percentage (0-100)
+ */
+export function tokenSetRatio(a: string, b: string): number {
+  const tokensA = tokenize(a);
+  const tokensB = tokenize(b);
+
+  if (tokensA.length === 0 && tokensB.length === 0) {
+    return 100;
+  }
+
+  if (tokensA.length === 0 || tokensB.length === 0) {
+    return 0;
+  }
+
+  // Create sets for intersection and difference operations
+  const setA = new Set(tokensA);
+  const setB = new Set(tokensB);
+
+  // Find intersection (common tokens)
+  const intersection = new Set([...setA].filter((token) => setB.has(token)));
+
+  // Find differences (unique to each set)
+  const diffA = [...setA].filter((token) => !intersection.has(token));
+  const diffB = [...setB].filter((token) => !intersection.has(token));
+
+  const intersectionStr = [...intersection].sort().join(' ');
+  const diffAStr = diffA.sort().join(' ');
+  const diffBStr = diffB.sort().join(' ');
+
+  // Build strings for comparison
+  const sortedIntersection = intersectionStr;
+  const strA = sortedIntersection + (diffAStr ? ` ${diffAStr}` : '');
+  const strB = sortedIntersection + (diffBStr ? ` ${diffBStr}` : '');
+
+  // Compare: intersection vs intersection, full vs full, and intersection vs each full
+  const scores = [
+    ratio(sortedIntersection, sortedIntersection),
+    ratio(strA, strB),
+    ratio(sortedIntersection, strA),
+    ratio(sortedIntersection, strB),
+  ];
+
+  return Math.max(...scores);
+}
+
+// ============================================================================
+// Process Module - Finding best matches from a list (TypeScript implementations)
+// ============================================================================
+
+export type ScorerFunction = (a: string, b: string) => number;
+
+export interface ExtractOptions {
+  scorer?: ScorerFunction;
+  processor?: (str: string) => string;
+  score_cutoff?: number;
+  limit?: number;
+}
+
+export interface ExtractResult {
+  choice: string;
+  score: number;
+  index: number;
+}
+
+/**
+ * Find the best match from a list of choices
+ * Returns the best matching choice with its score and index
+ */
+export function extractOne(
+  query: string,
+  choices: string[],
+  options: ExtractOptions = {},
+): ExtractResult | null {
+  const { scorer = ratio, processor = (s) => s, score_cutoff = 0 } = options;
+
+  if (choices.length === 0) {
+    return null;
+  }
+
+  const processedQuery = processor(query);
+  let bestMatch: ExtractResult | null = null;
+  let bestScore = -Infinity;
+
+  for (let i = 0; i < choices.length; i++) {
+    const choice = choices[i];
+    const processedChoice = processor(choice);
+    const score = scorer(processedQuery, processedChoice);
+
+    if (score >= score_cutoff && score > bestScore) {
+      bestScore = score;
+      bestMatch = {
+        choice,
+        score,
+        index: i,
+      };
+    }
+  }
+
+  return bestMatch;
+}
+
+/**
+ * Find the top N best matches from a list of choices
+ * Returns an array of matches sorted by score (best first)
+ */
+export function extract(
+  query: string,
+  choices: string[],
+  options: ExtractOptions = {},
+): ExtractResult[] {
+  const { scorer = ratio, processor = (s) => s, score_cutoff = 0, limit } = options;
+
+  if (choices.length === 0) {
+    return [];
+  }
+
+  const processedQuery = processor(query);
+  const results: ExtractResult[] = [];
+
+  for (let i = 0; i < choices.length; i++) {
+    const choice = choices[i];
+    const processedChoice = processor(choice);
+    const score = scorer(processedQuery, processedChoice);
+
+    if (score >= score_cutoff) {
+      results.push({
+        choice,
+        score,
+        index: i,
+      });
+    }
+  }
+
+  // Sort by score descending
+  results.sort((a, b) => b.score - a.score);
+
+  // Apply limit if specified
+  return limit !== undefined ? results.slice(0, limit) : results;
+}
+
+// ============================================================================
+// Unified API - Metric-selectable distance and scoring
+// ============================================================================
+
+export type DistanceMetric = 'levenshtein' | 'damerau_levenshtein' | 'osa' | 'indel' | 'lcs_seq';
+
+export type SimilarityMetric =
+  | 'levenshtein'
+  | 'damerau_levenshtein'
+  | 'osa'
+  | 'jaro'
+  | 'jaro_winkler'
+  | 'indel'
+  | 'lcs_seq'
+  | 'ratio'
+  | 'partial_ratio'
+  | 'token_sort_ratio'
+  | 'token_set_ratio';
+
+/**
+ * Calculate edit distance between two strings using the specified metric
+ * Returns the raw distance (number of edits required)
+ *
+ * @param a First string
+ * @param b Second string
+ * @param metric Distance metric to use (default: 'levenshtein')
+ * @returns Edit distance (raw number)
+ */
+export function distance(a: string, b: string, metric: DistanceMetric = 'levenshtein'): number {
+  switch (metric) {
+    case 'levenshtein':
+      return levenshtein(a, b);
+    case 'damerau_levenshtein':
+      return damerau_levenshtein(a, b);
+    case 'osa':
+      return osa_distance(a, b);
+    case 'indel':
+      return indel_distance(a, b);
+    case 'lcs_seq':
+      return lcs_seq_distance(a, b);
+    default:
+      throw new Error(`Unknown distance metric: ${metric}`);
+  }
+}
+
+/**
+ * Calculate similarity score between two strings using the specified metric
+ * Returns normalized similarity score (0.0-1.0) where 1.0 is identical
+ *
+ * @param a First string
+ * @param b Second string
+ * @param metric Similarity metric to use (default: 'jaro_winkler')
+ * @returns Similarity score (0.0-1.0)
+ */
+export function score(a: string, b: string, metric: SimilarityMetric = 'jaro_winkler'): number {
+  switch (metric) {
+    case 'levenshtein':
+      return normalized_levenshtein(a, b);
+    case 'damerau_levenshtein':
+      return normalized_damerau_levenshtein(a, b);
+    case 'osa':
+      return normalized_osa_similarity(a, b);
+    case 'jaro':
+      return jaro(a, b);
+    case 'jaro_winkler':
+      return jaro_winkler(a, b);
+    case 'indel':
+      return indel_normalized_similarity(a, b);
+    case 'lcs_seq':
+      return lcs_seq_normalized_similarity(a, b);
+    case 'ratio':
+      return ratio(a, b) / 100; // Convert 0-100 to 0-1
+    case 'partial_ratio':
+      return partialRatio(a, b) / 100; // Convert 0-100 to 0-1
+    case 'token_sort_ratio':
+      return tokenSortRatio(a, b) / 100; // Convert 0-100 to 0-1
+    case 'token_set_ratio':
+      return tokenSetRatio(a, b) / 100; // Convert 0-100 to 0-1
+    default:
+      throw new Error(`Unknown similarity metric: ${metric}`);
+  }
+}
+
 export interface SubstringResult {
   score: number;
   queryRange: [number, number];
@@ -100,7 +445,13 @@ export type SuggestMetric =
   | 'damerau_unrestricted'
   | 'jaro'
   | 'jaro_winkler'
-  | 'substring';
+  | 'substring'
+  | 'ratio'
+  | 'partial_ratio'
+  | 'token_sort_ratio'
+  | 'token_set_ratio'
+  | 'indel'
+  | 'lcs_seq';
 
 export interface SuggestionOptions {
   metric?: SuggestMetric;
@@ -161,6 +512,34 @@ const computeSimilarity = (
         matchedRange: { start: result.candidateRange[0], end: result.candidateRange[1] },
         explanation: `substring score=${result.score.toFixed(4)}`,
       };
+    }
+    case 'ratio': {
+      const rawScore = ratio(query, candidate);
+      const score = rawScore / 100; // Convert 0-100 to 0-1
+      return { score, explanation: `ratio=${score.toFixed(4)}` };
+    }
+    case 'partial_ratio': {
+      const rawScore = partialRatio(query, candidate);
+      const score = rawScore / 100; // Convert 0-100 to 0-1
+      return { score, explanation: `partial_ratio=${score.toFixed(4)}` };
+    }
+    case 'token_sort_ratio': {
+      const rawScore = tokenSortRatio(query, candidate);
+      const score = rawScore / 100; // Convert 0-100 to 0-1
+      return { score, explanation: `token_sort_ratio=${score.toFixed(4)}` };
+    }
+    case 'token_set_ratio': {
+      const rawScore = tokenSetRatio(query, candidate);
+      const score = rawScore / 100; // Convert 0-100 to 0-1
+      return { score, explanation: `token_set_ratio=${score.toFixed(4)}` };
+    }
+    case 'indel': {
+      const score = indel_normalized_similarity(query, candidate);
+      return { score, explanation: `indel_normalized_similarity=${score.toFixed(4)}` };
+    }
+    case 'lcs_seq': {
+      const score = lcs_seq_normalized_similarity(query, candidate);
+      return { score, explanation: `lcs_seq_normalized_similarity=${score.toFixed(4)}` };
     }
     default:
       throw new Error(`Unknown metric: ${metric}`);

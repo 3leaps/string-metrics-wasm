@@ -10,7 +10,6 @@ import init, {
   // Existing functions (regression check)
   levenshtein,
   normalized_levenshtein,
-
   // Phase 1a additions
   ratio,
   indel_distance,
@@ -33,7 +32,9 @@ const b = 'sitting';
 // Test existing functions (regression)
 console.log('Existing functions (regression check):');
 console.log(`  levenshtein("${a}", "${b}") = ${levenshtein(a, b)} (expected: 3)`);
-console.log(`  normalized_levenshtein("${a}", "${b}") = ${normalized_levenshtein(a, b).toFixed(4)} (expected: ~0.5714)`);
+console.log(
+  `  normalized_levenshtein("${a}", "${b}") = ${normalized_levenshtein(a, b).toFixed(4)} (expected: ~0.5714)`,
+);
 
 // Test new functions
 console.log('\nNew functions (Phase 1a):');
