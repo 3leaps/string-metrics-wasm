@@ -34,8 +34,10 @@
     "version:sync": "make version-sync",
     "lint": "biome lint src/",
     "lint:fix": "biome lint --write src/",
+    "typecheck": "tsc --noEmit",
     "format": "biome format src/ && prettier --write '**/*.{json,yaml,yml,md}'",
     "format:check": "biome format src/ && prettier --check '**/*.{json,yaml,yml,md}'",
+    "license:check": "node scripts/check-licenses.js",
     "quality": "make quality",
     "prepare": "husky",
     "prepublishOnly": "make quality && make build"
@@ -60,6 +62,7 @@
     "@vitest/browser": "^1.0.0",
     "husky": "^9.1.7",
     "js-yaml": "^4.1.0",
+    "license-checker": "^25.0.1",
     "prettier": "^3.6.0",
     "typescript": "^5.0.0",
     "vitest": "^1.0.0",

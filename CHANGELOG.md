@@ -5,6 +5,45 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project
 adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+## [0.3.1] - TBD
+
+### Added
+
+- **License compliance checking**
+  - `scripts/check-licenses.js` - Automated license scanner for production dependencies
+  - Blocks copyleft licenses (GPL, LGPL, AGPL, SSPL, EUPL, OSL, CDDL, EPL)
+  - Allows permissive licenses (MIT, ISC, Apache-2.0, BSD, CC0, Unlicense)
+  - `npm run license:check` script
+  - Integrated into pre-push git hook
+- **TypeScript type checking**
+  - `npm run typecheck` script (tsc --noEmit)
+  - `make typecheck` Makefile target
+  - Integrated into `make quality` checks
+  - Added to pre-commit hook for fast feedback
+- **Git hooks with husky**
+  - Pre-commit: format, lint, typecheck, rust checks
+  - Pre-push: version check, license check, quality, build, tests, fixtures
+  - Automated quality gates for all commits and pushes
+
+### Changed
+
+- Updated all strsim-rs references to rapidfuzz-rs for consistency
+- Package description now mentions rapidfuzz-rs instead of strsim-rs
+- Documentation and fixture headers updated with rapidfuzz 0.5.x references
+
+### Fixed
+
+- Excluded similarity-validator binary from npm package (reduced from 841KB to 31.5KB)
+
+### Developer Dependencies
+
+- Added `husky@^9.1.7` for git hooks
+- Added `license-checker@^25.0.1` for license compliance
+
+[0.3.1]: https://github.com/3leaps/string-metrics-wasm/compare/v0.3.0...v0.3.1
+
 ## [0.3.0] - 2025-10-30
 
 ### Added

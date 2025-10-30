@@ -26,7 +26,14 @@ make lint || {
   exit 1
 }
 
-# 4. Rust checks
+# 4. Type checking
+echo "🔍 Type checking..."
+make typecheck || {
+  echo "❌ TypeScript type errors found. Please fix before committing."
+  exit 1
+}
+
+# 5. Rust checks
 echo "🦀 Checking Rust code..."
 make rust-fmt || {
   echo "❌ Rust formatting failed. Please fix before committing."

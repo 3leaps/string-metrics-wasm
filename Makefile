@@ -1,5 +1,5 @@
 .PHONY: help bootstrap build test clean version-check version-sync bump-patch bump-minor bump-major set-version
-.PHONY: quality format format-check lint lint-fix rust-fmt rust-clippy
+.PHONY: quality format format-check lint lint-fix typecheck rust-fmt rust-clippy
 .PHONY: build-validator validate-fixtures
 
 # Default target
@@ -18,6 +18,7 @@ help:
 	@echo "  make format-check   - Check formatting without changes"
 	@echo "  make lint           - Lint TypeScript code with Biome"
 	@echo "  make lint-fix       - Lint and auto-fix TypeScript code"
+	@echo "  make typecheck      - TypeScript type checking"
 	@echo "  make rust-fmt       - Format Rust code"
 	@echo "  make rust-clippy    - Run Clippy linter on Rust code"
 	@echo ""
@@ -127,7 +128,7 @@ clean-all: clean
 	@echo "✅ Full clean complete"
 
 # Code quality targets
-quality: version-check format-check lint rust-fmt-check rust-clippy
+quality: version-check format-check lint typecheck rust-fmt-check rust-clippy
 	@echo "✅ All quality checks passed"
 
 format: rust-fmt
@@ -153,6 +154,11 @@ lint-fix:
 	@echo "Linting and fixing TypeScript with Biome..."
 	@npx biome lint --write .
 	@echo "✅ Lint fix complete"
+
+typecheck:
+	@echo "Type checking TypeScript..."
+	@npm run typecheck
+	@echo "✅ Type check complete"
 
 rust-fmt:
 	@echo "Formatting Rust code..."
