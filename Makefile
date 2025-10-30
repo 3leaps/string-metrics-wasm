@@ -1,5 +1,6 @@
 .PHONY: help bootstrap build test clean version-check version-sync bump-patch bump-minor bump-major set-version
 .PHONY: quality format format-check lint lint-fix typecheck rust-fmt rust-clippy
+.PHONY: precommit prepush
 .PHONY: build-validator validate-fixtures
 
 # Default target
@@ -21,6 +22,10 @@ help:
 	@echo "  make typecheck      - TypeScript type checking"
 	@echo "  make rust-fmt       - Format Rust code"
 	@echo "  make rust-clippy    - Run Clippy linter on Rust code"
+	@echo ""
+	@echo "Git hooks:"
+	@echo "  make precommit      - Run pre-commit checks (format, lint, typecheck, rust)"
+	@echo "  make prepush        - Run pre-push validation (version, license, quality, build, test)"
 	@echo ""
 	@echo "Fixture validation:"
 	@echo "  make build-validator      - Build similarity-validator (current platform)"
@@ -174,6 +179,30 @@ rust-clippy:
 	@echo "Running Clippy on Rust code..."
 	@cargo clippy -- -D warnings
 	@echo "✅ Clippy complete"
+
+# Git hook targets
+precommit:
+	@echo "🔧 Running pre-commit checks..."
+	@$(MAKE) format
+	@$(MAKE) format-check
+	@$(MAKE) lint
+	@$(MAKE) typecheck
+	@$(MAKE) rust-fmt
+	@$(MAKE) rust-clippy
+	@echo "✅ All pre-commit checks passed!"
+
+prepush:
+	@echo "🚀 Running pre-push validation..."
+	@$(MAKE) version-check
+	@npm run license:check || { echo "❌ License check failed"; exit 1; }
+	@$(MAKE) quality
+	@$(MAKE) build
+	@$(MAKE) test
+	@if [ -f "dist/similarity-validator" ]; then \
+		echo "📋 Validating fixtures..."; \
+		$(MAKE) validate-fixtures || echo "⚠️  Fixture validation failed (non-blocking)"; \
+	fi
+	@echo "✅ All pre-push checks passed!"
 
 # Fixture validation targets
 build-validator:

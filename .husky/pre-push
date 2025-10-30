@@ -1,58 +1,15 @@
 #!/bin/sh
 
 # string-metrics-wasm Pre-push Hook
-# Full validation suite including tests and build verification
+# Runs comprehensive validation via make prepush
 
-echo "🚀 string-metrics-wasm Pre-push Validation..."
-
-# 1. Version check
-echo "🔍 Checking version sync..."
-make version-check || {
-  echo "❌ Version mismatch between package.json and Cargo.toml. Please sync versions."
-  exit 1
-}
-
-# 2. License compliance check
-echo "📜 Checking license compliance..."
-npm run license:check || {
-  echo "❌ License check failed. Dependencies with GPL/LGPL/AGPL detected."
-  echo "   Please replace with permissively-licensed alternatives."
-  exit 1
-}
-
-# 3. Full quality checks
-echo "✨ Running quality checks..."
-make quality || {
-  echo "❌ Quality checks failed. Please fix before pushing."
+make prepush || {
   echo ""
-  echo "💡 Common fixes:"
-  echo "   - Format issues: 'make format'"
-  echo "   - Lint issues: 'make lint-fix'"
-  echo "   - Rust issues: 'make rust-fmt && make rust-clippy'"
+  echo "❌ Pre-push validation failed. Common fixes:"
+  echo "   - Version mismatch: 'make version-sync'"
+  echo "   - License issues: Check 'npm run license:check' output"
+  echo "   - Quality checks: 'make quality'"
+  echo "   - Build errors: 'make build'"
+  echo "   - Test failures: 'make test'"
   exit 1
 }
-
-# 4. Build verification
-echo "🔨 Building WASM and TypeScript..."
-make build || {
-  echo "❌ Build failed. Please fix before pushing."
-  exit 1
-}
-
-# 5. Full test suite
-echo "🧪 Running test suite..."
-make test || {
-  echo "❌ Tests failed. Please fix before pushing."
-  exit 1
-}
-
-# 6. Validate fixtures (if validator is built)
-if [ -f "dist/similarity-validator" ]; then
-  echo "📋 Validating fixtures..."
-  make validate-fixtures || {
-    echo "⚠️  Fixture validation failed. Please review fixture accuracy."
-    # Don't fail on fixture validation - it's informational
-  }
-fi
-
-echo "✅ All pre-push checks passed!"

@@ -1,48 +1,14 @@
 #!/bin/sh
 
 # string-metrics-wasm Pre-commit Hook
-# Fast formatting and quality checks
+# Runs fast formatting and quality checks via make precommit
 
-echo "🔧 string-metrics-wasm Pre-commit Checks..."
-
-# 1. Code formatting (auto-fix)
-echo "📝 Formatting code..."
-make format || {
-  echo "❌ Formatting failed. Please fix before committing."
+make precommit || {
+  echo ""
+  echo "❌ Pre-commit checks failed. Common fixes:"
+  echo "   - Format issues: 'make format'"
+  echo "   - Lint issues: 'make lint-fix'"
+  echo "   - Type errors: Fix TypeScript type issues"
+  echo "   - Rust issues: 'make rust-fmt && make rust-clippy'"
   exit 1
 }
-
-# 2. Format check (verify)
-echo "🔍 Verifying format..."
-make format-check || {
-  echo "❌ Format check failed. Please fix before committing."
-  exit 1
-}
-
-# 3. Linting
-echo "🧹 Linting..."
-make lint || {
-  echo "❌ Linting errors found. Please fix before committing."
-  exit 1
-}
-
-# 4. Type checking
-echo "🔍 Type checking..."
-make typecheck || {
-  echo "❌ TypeScript type errors found. Please fix before committing."
-  exit 1
-}
-
-# 5. Rust checks
-echo "🦀 Checking Rust code..."
-make rust-fmt || {
-  echo "❌ Rust formatting failed. Please fix before committing."
-  exit 1
-}
-
-make rust-clippy || {
-  echo "❌ Clippy errors found. Please fix before committing."
-  exit 1
-}
-
-echo "✅ All pre-commit checks passed!"
