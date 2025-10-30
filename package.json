@@ -1,6 +1,6 @@
 {
   "name": "string-metrics-wasm",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "High-performance string similarity metrics via WASM bindings to rapidfuzz-rs",
   "type": "module",
   "main": "./dist/index.js",
@@ -37,6 +37,7 @@
     "format": "biome format src/ && prettier --write '**/*.{json,yaml,yml,md}'",
     "format:check": "biome format src/ && prettier --check '**/*.{json,yaml,yml,md}'",
     "quality": "make quality",
+    "prepare": "husky",
     "prepublishOnly": "make quality && make build"
   },
   "keywords": [
@@ -57,6 +58,7 @@
     "@types/js-yaml": "^4.0.9",
     "@types/node": "^20.19.23",
     "@vitest/browser": "^1.0.0",
+    "husky": "^9.1.7",
     "js-yaml": "^4.1.0",
     "prettier": "^3.6.0",
     "typescript": "^5.0.0",
