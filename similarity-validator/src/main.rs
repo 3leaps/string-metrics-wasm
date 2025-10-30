@@ -482,23 +482,30 @@ fn validate_ratio(file: &str, category: &str, test: &TestCase) -> ValidationResu
 fn validate_unified_distance(file: &str, category: &str, test: &TestCase) -> ValidationResult {
     let input_a = get_string_input(&test.inputs, "input_a").unwrap_or_default();
     let input_b = get_string_input(&test.inputs, "input_b").unwrap_or_default();
-    let metric = get_string_input(&test.inputs, "metric").unwrap_or_else(|| "levenshtein".to_string());
+    let metric =
+        get_string_input(&test.inputs, "metric").unwrap_or_else(|| "levenshtein".to_string());
 
     let actual_distance = match metric.as_str() {
-        "levenshtein" => rapidfuzz::distance::levenshtein::distance(input_a.chars(), input_b.chars()),
-        "damerau_levenshtein" => rapidfuzz::distance::damerau_levenshtein::distance(input_a.chars(), input_b.chars()),
+        "levenshtein" => {
+            rapidfuzz::distance::levenshtein::distance(input_a.chars(), input_b.chars())
+        }
+        "damerau_levenshtein" => {
+            rapidfuzz::distance::damerau_levenshtein::distance(input_a.chars(), input_b.chars())
+        }
         "osa" => rapidfuzz::distance::osa::distance(input_a.chars(), input_b.chars()),
         "indel" => rapidfuzz::distance::indel::distance(input_a.chars(), input_b.chars()),
         "lcs_seq" => rapidfuzz::distance::lcs_seq::distance(input_a.chars(), input_b.chars()),
-        _ => return ValidationResult {
-            file: file.to_string(),
-            category: category.to_string(),
-            description: test.description.clone(),
-            passed: false,
-            expected: None,
-            actual: None,
-            error: Some(format!("Unknown distance metric: {}", metric)),
-        },
+        _ => {
+            return ValidationResult {
+                file: file.to_string(),
+                category: category.to_string(),
+                description: test.description.clone(),
+                passed: false,
+                expected: None,
+                actual: None,
+                error: Some(format!("Unknown distance metric: {}", metric)),
+            }
+        }
     };
 
     let distance_matches = test
@@ -519,16 +526,29 @@ fn validate_unified_distance(file: &str, category: &str, test: &TestCase) -> Val
 fn validate_unified_score(file: &str, category: &str, test: &TestCase) -> ValidationResult {
     let input_a = get_string_input(&test.inputs, "input_a").unwrap_or_default();
     let input_b = get_string_input(&test.inputs, "input_b").unwrap_or_default();
-    let metric = get_string_input(&test.inputs, "metric").unwrap_or_else(|| "jaro_winkler".to_string());
+    let metric =
+        get_string_input(&test.inputs, "metric").unwrap_or_else(|| "jaro_winkler".to_string());
 
     let actual_score = match metric.as_str() {
-        "levenshtein" => rapidfuzz::distance::levenshtein::normalized_similarity(input_a.chars(), input_b.chars()),
-        "damerau_levenshtein" => rapidfuzz::distance::damerau_levenshtein::normalized_similarity(input_a.chars(), input_b.chars()),
+        "levenshtein" => rapidfuzz::distance::levenshtein::normalized_similarity(
+            input_a.chars(),
+            input_b.chars(),
+        ),
+        "damerau_levenshtein" => rapidfuzz::distance::damerau_levenshtein::normalized_similarity(
+            input_a.chars(),
+            input_b.chars(),
+        ),
         "osa" => rapidfuzz::distance::osa::normalized_similarity(input_a.chars(), input_b.chars()),
         "jaro" => rapidfuzz::distance::jaro::similarity(input_a.chars(), input_b.chars()),
-        "jaro_winkler" => rapidfuzz::distance::jaro_winkler::similarity(input_a.chars(), input_b.chars()),
-        "indel" => rapidfuzz::distance::indel::normalized_similarity(input_a.chars(), input_b.chars()),
-        "lcs_seq" => rapidfuzz::distance::lcs_seq::normalized_similarity(input_a.chars(), input_b.chars()),
+        "jaro_winkler" => {
+            rapidfuzz::distance::jaro_winkler::similarity(input_a.chars(), input_b.chars())
+        }
+        "indel" => {
+            rapidfuzz::distance::indel::normalized_similarity(input_a.chars(), input_b.chars())
+        }
+        "lcs_seq" => {
+            rapidfuzz::distance::lcs_seq::normalized_similarity(input_a.chars(), input_b.chars())
+        }
         "ratio" => rapidfuzz::fuzz::ratio(input_a.chars(), input_b.chars()) / 100.0, // ratio returns 0-100, normalize to 0-1
         // TypeScript-only metrics - these can't be validated in Rust
         "partial_ratio" | "token_sort_ratio" | "token_set_ratio" => {
@@ -542,15 +562,17 @@ fn validate_unified_score(file: &str, category: &str, test: &TestCase) -> Valida
                 error: None,
             }
         }
-        _ => return ValidationResult {
-            file: file.to_string(),
-            category: category.to_string(),
-            description: test.description.clone(),
-            passed: false,
-            expected: None,
-            actual: None,
-            error: Some(format!("Unknown score metric: {}", metric)),
-        },
+        _ => {
+            return ValidationResult {
+                file: file.to_string(),
+                category: category.to_string(),
+                description: test.description.clone(),
+                passed: false,
+                expected: None,
+                actual: None,
+                error: Some(format!("Unknown score metric: {}", metric)),
+            }
+        }
     };
 
     let score_matches = test
@@ -1044,7 +1066,8 @@ fn generate_lcs_seq(case: &mut TestCase, overwrite: bool) -> bool {
     let input_b = get_string_input(&case.inputs, "input_b").unwrap_or_default();
 
     let distance = rapidfuzz::distance::lcs_seq::distance(input_a.chars(), input_b.chars());
-    let score = rapidfuzz::distance::lcs_seq::normalized_similarity(input_a.chars(), input_b.chars());
+    let score =
+        rapidfuzz::distance::lcs_seq::normalized_similarity(input_a.chars(), input_b.chars());
 
     case.expected_distance = Some(distance);
     case.expected_score = Some(score);
@@ -1072,11 +1095,16 @@ fn generate_unified_distance(case: &mut TestCase, overwrite: bool) -> bool {
 
     let input_a = get_string_input(&case.inputs, "input_a").unwrap_or_default();
     let input_b = get_string_input(&case.inputs, "input_b").unwrap_or_default();
-    let metric = get_string_input(&case.inputs, "metric").unwrap_or_else(|| "levenshtein".to_string());
+    let metric =
+        get_string_input(&case.inputs, "metric").unwrap_or_else(|| "levenshtein".to_string());
 
     let distance = match metric.as_str() {
-        "levenshtein" => rapidfuzz::distance::levenshtein::distance(input_a.chars(), input_b.chars()),
-        "damerau_levenshtein" => rapidfuzz::distance::damerau_levenshtein::distance(input_a.chars(), input_b.chars()),
+        "levenshtein" => {
+            rapidfuzz::distance::levenshtein::distance(input_a.chars(), input_b.chars())
+        }
+        "damerau_levenshtein" => {
+            rapidfuzz::distance::damerau_levenshtein::distance(input_a.chars(), input_b.chars())
+        }
         "osa" => rapidfuzz::distance::osa::distance(input_a.chars(), input_b.chars()),
         "indel" => rapidfuzz::distance::indel::distance(input_a.chars(), input_b.chars()),
         "lcs_seq" => rapidfuzz::distance::lcs_seq::distance(input_a.chars(), input_b.chars()),
@@ -1097,16 +1125,29 @@ fn generate_unified_score(case: &mut TestCase, overwrite: bool) -> bool {
 
     let input_a = get_string_input(&case.inputs, "input_a").unwrap_or_default();
     let input_b = get_string_input(&case.inputs, "input_b").unwrap_or_default();
-    let metric = get_string_input(&case.inputs, "metric").unwrap_or_else(|| "jaro_winkler".to_string());
+    let metric =
+        get_string_input(&case.inputs, "metric").unwrap_or_else(|| "jaro_winkler".to_string());
 
     let score = match metric.as_str() {
-        "levenshtein" => rapidfuzz::distance::levenshtein::normalized_similarity(input_a.chars(), input_b.chars()),
-        "damerau_levenshtein" => rapidfuzz::distance::damerau_levenshtein::normalized_similarity(input_a.chars(), input_b.chars()),
+        "levenshtein" => rapidfuzz::distance::levenshtein::normalized_similarity(
+            input_a.chars(),
+            input_b.chars(),
+        ),
+        "damerau_levenshtein" => rapidfuzz::distance::damerau_levenshtein::normalized_similarity(
+            input_a.chars(),
+            input_b.chars(),
+        ),
         "osa" => rapidfuzz::distance::osa::normalized_similarity(input_a.chars(), input_b.chars()),
         "jaro" => rapidfuzz::distance::jaro::similarity(input_a.chars(), input_b.chars()),
-        "jaro_winkler" => rapidfuzz::distance::jaro_winkler::similarity(input_a.chars(), input_b.chars()),
-        "indel" => rapidfuzz::distance::indel::normalized_similarity(input_a.chars(), input_b.chars()),
-        "lcs_seq" => rapidfuzz::distance::lcs_seq::normalized_similarity(input_a.chars(), input_b.chars()),
+        "jaro_winkler" => {
+            rapidfuzz::distance::jaro_winkler::similarity(input_a.chars(), input_b.chars())
+        }
+        "indel" => {
+            rapidfuzz::distance::indel::normalized_similarity(input_a.chars(), input_b.chars())
+        }
+        "lcs_seq" => {
+            rapidfuzz::distance::lcs_seq::normalized_similarity(input_a.chars(), input_b.chars())
+        }
         "ratio" => rapidfuzz::fuzz::ratio(input_a.chars(), input_b.chars()) / 100.0,
         "partial_ratio" | "token_sort_ratio" | "token_set_ratio" => {
             // TypeScript-only - skip generation
