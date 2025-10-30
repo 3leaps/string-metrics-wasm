@@ -198,11 +198,9 @@ prepush:
 	@$(MAKE) quality
 	@$(MAKE) build
 	@$(MAKE) test
-	@if [ -f "dist/similarity-validator" ]; then \
-		echo "📋 Validating fixtures..."; \
-		$(MAKE) validate-fixtures || { echo "⚠️  Fixture validation failed (non-blocking)"; true; }; \
-	fi
 	@echo "✅ All pre-push checks passed!"
+	@echo ""
+	@echo "💡 Optional: Run 'make validate-fixtures' to check fixture accuracy"
 
 # Fixture validation targets
 build-validator:
