@@ -5,6 +5,90 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project
 adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0] - 2025-10-30
+
+### Added
+
+- **Token-based fuzzy matching** (TypeScript implementations)
+  - `partialRatio(a, b)` - Substring matching with sliding window (0-100 scale)
+  - `tokenSortRatio(a, b)` - Order-insensitive token comparison (0-100 scale)
+  - `tokenSetRatio(a, b)` - Set-based token comparison handling duplicates (0-100 scale)
+- **Process helpers** (TypeScript implementations)
+  - `extractOne(query, choices, options)` - Find best match from array
+  - `extract(query, choices, options)` - Find top N matches with configurable scorer, processor,
+    cutoff, and limit
+  - RapidFuzz-compatible API with `>=` cutoff semantics
+- **Unified API** (TypeScript implementations)
+  - `distance(a, b, metric?)` - Metric-selectable edit distance (default: levenshtein)
+  - `score(a, b, metric?)` - Metric-selectable similarity score 0-1 normalized (default:
+    jaro_winkler)
+  - Supports all 16 metrics with consistent scaling
+- **Extended WASM metrics** (rapidfuzz-rs 0.5.0 bindings)
+  - `ratio(a, b)` - Basic fuzzy comparison using Indel distance (0-100 scale)
+  - `indel_distance(a, b)` - Insertion/deletion only distance
+  - `indel_normalized_similarity(a, b)` - Normalized indel similarity (0-1 scale)
+  - `lcs_seq_distance(a, b)` - Longest Common Subsequence distance
+  - `lcs_seq_similarity(a, b)` - LCS similarity (character count)
+  - `lcs_seq_normalized_similarity(a, b)` - Normalized LCS (0-1 scale)
+- **Extended Suggestions API**
+  - Added support for 6 new metrics: ratio, partial_ratio, token_sort_ratio, token_set_ratio, indel,
+    lcs_seq
+  - Maintains backward compatibility with all existing metrics
+- **Comprehensive test coverage**
+  - 115 unit tests (up from 47, +68 new tests)
+  - 80 YAML fixture test cases across 5 new fixture files
+  - 100% coverage of all Phase 1b/1c functions
+
+### Fixed
+
+- **ratio() scale bug** - Now correctly returns 0-100 scale (was returning 0-1)
+- **extractOne() cutoff comparison** - Changed from `>` to `>=` for RapidFuzz parity
+- **tokenSetRatio() empty intersection** - Fixed bug returning 100 for completely different token
+  sets
+
+### Performance
+
+- All operations complete in < 1ms per call
+- WASM metrics: 0.0003-0.0005ms per operation
+- Token-based metrics: 0.0003-0.0017ms per operation
+- Process helpers: 0.0008-0.001ms per operation
+- Unified API: minimal dispatch overhead
+
+### Technical Details
+
+- **Bundle size**: 226 KB (+1 KB from v0.2.0, well below 275 KB target)
+- **Hybrid approach**: WASM primitives + TypeScript value-adds pattern
+- **Testing**: Comprehensive YAML fixtures in `tests/fixtures/v2.0.0/rapidfuzz/`
+- **Benchmarks**: Added `benchmark-phase1b.js` for performance verification
+
+### Documentation
+
+- **Comprehensive README** with full API documentation and usage examples
+- **Implementation details** documenting WASM vs TypeScript implementations
+- **Performance metrics** for all new functions
+- **Links to rapidfuzz-rs** and related projects
+
+[0.3.0]: https://github.com/3leaps/string-metrics-wasm/releases/tag/v0.3.0
+
+## [0.2.0] - 2025-10-29
+
+### Changed
+
+- **Migrated from strsim-rs to rapidfuzz-rs 0.5.0**
+  - All 8 core WASM functions now use rapidfuzz-rs
+  - 100% API compatibility maintained (no breaking changes)
+  - 47/47 TypeScript tests + 46/46 validator tests passing
+
+### Performance
+
+- **1.9x-2.6x faster** than strsim-rs across all metrics
+  - levenshtein: +112% faster (3.27M ops/sec)
+  - normalized_levenshtein: +159% faster (4.17M ops/sec)
+  - jaro_winkler: +93% faster (3.72M ops/sec)
+- **Bundle size**: 225 KB (within tolerance)
+
+[0.2.0]: https://github.com/3leaps/string-metrics-wasm/releases/tag/v0.2.0
+
 ## [0.1.0] - 2025-10-29
 
 ### Added
