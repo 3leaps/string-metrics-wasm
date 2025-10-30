@@ -1,0 +1,127 @@
+$schema: https://schemas.fulmenhq.dev/library/foundry/v2.0.0/similarity.schema.json
+version: 2025.10.3
+notes: |
+  Token-based fuzzy matching metrics
+  Reference: Python rapidfuzz 3.x patterns, implemented in TypeScript
+test_cases:
+  - category: partial_ratio
+    cases:
+      - input_a: 'fuzzy'
+        input_b: 'fuzzy wuzzy was a bear'
+        expected_ratio: 100.0
+        description: Perfect substring match
+        tags:
+          - substring
+          - standard
+      - input_a: 'this is a test'
+        input_b: 'this is a test!'
+        expected_ratio: 100.0
+        description: Substring with extra punctuation
+        tags:
+          - substring
+      - input_a: 'hello'
+        input_b: 'world'
+        expected_ratio: 20.0
+        description: No good substring match
+        tags:
+          - standard
+      - input_a: 'test'
+        input_b: 'testing'
+        expected_ratio: 100.0
+        description: Partial word match (perfect substring)
+        tags:
+          - standard
+          - substring
+      - input_a: ''
+        input_b: 'hello'
+        expected_ratio: 0.0
+        description: Empty string vs non-empty
+        tags:
+          - edge_case
+  - category: token_sort_ratio
+    cases:
+      - input_a: 'fuzzy wuzzy was a bear'
+        input_b: 'wuzzy bear was a fuzzy'
+        expected_ratio: 100.0
+        description: Same tokens, different order
+        tags:
+          - order_insensitive
+          - standard
+      - input_a: 'new york mets'
+        input_b: 'mets york new'
+        expected_ratio: 100.0
+        description: Three tokens reordered
+        tags:
+          - order_insensitive
+      - input_a: 'hello world'
+        input_b: 'world hello'
+        expected_ratio: 100.0
+        description: Simple two token swap
+        tags:
+          - order_insensitive
+      - input_a: 'the cat sat on the mat'
+        input_b: 'cat sat mat the on the'
+        expected_ratio: 100.0
+        description: Complex reordering with duplicates
+        tags:
+          - order_insensitive
+          - duplicates
+      - input_a: 'hello'
+        input_b: 'world'
+        expected_ratio: 20.0
+        description: Different tokens
+        tags:
+          - standard
+      - input_a: ''
+        input_b: ''
+        expected_ratio: 100.0
+        description: Empty strings
+        tags:
+          - edge_case
+          - identity
+  - category: token_set_ratio
+    cases:
+      - input_a: 'mariners vs angels'
+        input_b: 'angels vs mariners'
+        expected_ratio: 100.0
+        description: Same token set, different order
+        tags:
+          - order_insensitive
+          - standard
+      - input_a: 'new york mets vs atlanta braves'
+        input_b: 'atlanta braves vs new york mets'
+        expected_ratio: 100.0
+        description: Multi-word tokens reordered
+        tags:
+          - order_insensitive
+      - input_a: 'hello world world'
+        input_b: 'hello world'
+        expected_ratio: 100.0
+        description: Duplicate token handling
+        tags:
+          - duplicates
+      - input_a: 'the cat sat on the mat'
+        input_b: 'cat sat mat the on the'
+        expected_ratio: 100.0
+        description: Set-based comparison ignores order
+        tags:
+          - order_insensitive
+      - input_a: 'hello'
+        input_b: 'world'
+        expected_ratio: 33.333333333333336
+        description: Completely different sets (no common tokens)
+        tags:
+          - standard
+      - input_a: ''
+        input_b: ''
+        expected_ratio: 100.0
+        description: Empty strings
+        tags:
+          - edge_case
+          - identity
+      - input_a: 'a b c'
+        input_b: 'c b a'
+        expected_ratio: 100.0
+        description: Simple set equality
+        tags:
+          - order_insensitive

@@ -205,12 +205,14 @@ export function tokenSetRatio(a: string, b: string): number {
   const strB = sortedIntersection + (diffBStr ? ` ${diffBStr}` : '');
 
   // Compare: intersection vs intersection, full vs full, and intersection vs each full
-  const scores = [
-    ratio(sortedIntersection, sortedIntersection),
-    ratio(strA, strB),
-    ratio(sortedIntersection, strA),
-    ratio(sortedIntersection, strB),
-  ];
+  const scores = [ratio(strA, strB)];
+
+  // Only include intersection comparisons if there's a non-empty intersection
+  if (sortedIntersection.length > 0) {
+    scores.push(ratio(sortedIntersection, sortedIntersection));
+    scores.push(ratio(sortedIntersection, strA));
+    scores.push(ratio(sortedIntersection, strB));
+  }
 
   return Math.max(...scores);
 }

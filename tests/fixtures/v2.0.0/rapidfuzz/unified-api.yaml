@@ -1,0 +1,121 @@
+$schema: https://schemas.fulmenhq.dev/library/foundry/v2.0.0/similarity.schema.json
+version: 2025.10.3
+notes: |
+  Unified distance() and score() API tests
+  Tests metric-selectable interface with consistent scales
+test_cases:
+  - category: unified_distance
+    cases:
+      - input_a: kitten
+        input_b: sitting
+        metric: levenshtein
+        expected: 3
+        description: Levenshtein distance
+        tags:
+          - standard
+      - input_a: kitten
+        input_b: sitting
+        metric: damerau_levenshtein
+        expected: 3
+        description: Damerau-Levenshtein distance
+        tags:
+          - standard
+      - input_a: kitten
+        input_b: sitting
+        metric: osa
+        expected: 3
+        description: OSA distance
+        tags:
+          - standard
+      - input_a: kitten
+        input_b: sitting
+        metric: indel
+        expected: 5
+        description: Indel distance (no substitutions)
+        tags:
+          - standard
+      - input_a: kitten
+        input_b: sitting
+        metric: lcs_seq
+        expected: 3
+        description: LCS distance
+        tags:
+          - standard
+      - input_a: ''
+        input_b: ''
+        metric: levenshtein
+        expected: 0
+        description: Empty strings (identity)
+        tags:
+          - edge_case
+          - identity
+  - category: unified_score
+    cases:
+      - input_a: kitten
+        input_b: sitting
+        metric: levenshtein
+        expected: 0.5714285714285714
+        description: Levenshtein score (0-1)
+        tags:
+          - standard
+      - input_a: kitten
+        input_b: sitting
+        metric: jaro_winkler
+        expected: 0.7460317460317460
+        description: Jaro-Winkler score
+        tags:
+          - standard
+      - input_a: kitten
+        input_b: sitting
+        metric: ratio
+        expected: 0.6153846153846154
+        description: Ratio score (0-100 converted to 0-1)
+        tags:
+          - standard
+          - scale_conversion
+      - input_a: 'new york mets'
+        input_b: 'mets york new'
+        metric: token_sort_ratio
+        expected: 1.0
+        description: Token sort ratio (perfect match, order-insensitive)
+        tags:
+          - token_based
+          - order_insensitive
+      - input_a: 'new york mets'
+        input_b: 'mets york new'
+        metric: token_set_ratio
+        expected: 1.0
+        description: Token set ratio (perfect match, set-based)
+        tags:
+          - token_based
+          - order_insensitive
+      - input_a: 'fuzzy'
+        input_b: 'fuzzy wuzzy was a bear'
+        metric: partial_ratio
+        expected: 1.0
+        description: Partial ratio (perfect substring)
+        tags:
+          - token_based
+          - substring
+      - input_a: hello
+        input_b: hello
+        metric: levenshtein
+        expected: 1.0
+        description: Identical strings (perfect score)
+        tags:
+          - identity
+      - input_a: abc
+        input_b: xyz
+        metric: levenshtein
+        expected: 0.0
+        description: Completely different strings
+        tags:
+          - edge_case
+      - input_a: ''
+        input_b: ''
+        metric: jaro_winkler
+        expected: 1.0
+        description: Empty strings (identity)
+        tags:
+          - edge_case
+          - identity

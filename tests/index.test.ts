@@ -4,15 +4,28 @@ import yaml from 'js-yaml';
 import { describe, expect, it } from 'vitest';
 import {
   damerau_levenshtein,
+  distance,
+  extract,
+  extractOne,
+  indel_distance,
+  indel_normalized_similarity,
   jaro_winkler,
+  lcs_seq_distance,
+  lcs_seq_normalized_similarity,
+  lcs_seq_similarity,
   levenshtein,
   normalize,
-  normalized_osa_similarity,
   normalized_damerau_levenshtein,
   normalized_levenshtein,
+  normalized_osa_similarity,
   osa_distance,
+  partialRatio,
+  ratio,
+  score,
   substringSimilarity,
   suggest,
+  tokenSetRatio,
+  tokenSortRatio,
 } from '../src/index';
 
 // Version consistency test
@@ -162,6 +175,77 @@ for (const document of fixtureDocuments) {
                   expect(result[i].normalized_value).toBe(exp.normalized_value);
                 }
               },
+            );
+          } else if (categoryGroup.category === 'ratio') {
+            expect(ratio(testCase.input_a, testCase.input_b)).toBeCloseTo(
+              testCase.expected_ratio,
+              10,
+            );
+          } else if (categoryGroup.category === 'partial_ratio') {
+            expect(partialRatio(testCase.input_a, testCase.input_b)).toBeCloseTo(
+              testCase.expected_ratio,
+              10,
+            );
+          } else if (categoryGroup.category === 'token_sort_ratio') {
+            expect(tokenSortRatio(testCase.input_a, testCase.input_b)).toBeCloseTo(
+              testCase.expected_ratio,
+              10,
+            );
+          } else if (categoryGroup.category === 'token_set_ratio') {
+            expect(tokenSetRatio(testCase.input_a, testCase.input_b)).toBeCloseTo(
+              testCase.expected_ratio,
+              10,
+            );
+          } else if (categoryGroup.category === 'indel') {
+            expect(indel_distance(testCase.input_a, testCase.input_b)).toBe(
+              testCase.expected_distance,
+            );
+            expect(indel_normalized_similarity(testCase.input_a, testCase.input_b)).toBeCloseTo(
+              testCase.expected_score,
+              10,
+            );
+          } else if (categoryGroup.category === 'lcs_seq') {
+            expect(lcs_seq_distance(testCase.input_a, testCase.input_b)).toBe(
+              testCase.expected_distance,
+            );
+            expect(lcs_seq_similarity(testCase.input_a, testCase.input_b)).toBe(
+              testCase.expected_similarity,
+            );
+            expect(lcs_seq_normalized_similarity(testCase.input_a, testCase.input_b)).toBeCloseTo(
+              testCase.expected_score,
+              10,
+            );
+          } else if (categoryGroup.category === 'extract_one') {
+            const result = extractOne(testCase.query, testCase.choices, {
+              score_cutoff: testCase.score_cutoff ?? 0,
+            });
+            if (testCase.expected_choice === null) {
+              expect(result).toBeNull();
+            } else {
+              expect(result).not.toBeNull();
+              expect(result?.choice).toBe(testCase.expected_choice);
+              expect(result?.index).toBe(testCase.expected_index);
+            }
+          } else if (categoryGroup.category === 'extract') {
+            const result = extract(testCase.query, testCase.choices, {
+              score_cutoff: testCase.score_cutoff ?? 0,
+              limit: testCase.limit,
+            });
+            expect(result).toHaveLength(testCase.expected_results.length);
+            testCase.expected_results.forEach(
+              (exp: { choice: string; index: number }, i: number) => {
+                expect(result[i].choice).toBe(exp.choice);
+                expect(result[i].index).toBe(exp.index);
+              },
+            );
+          } else if (categoryGroup.category === 'unified_distance') {
+            expect(distance(testCase.input_a, testCase.input_b, testCase.metric)).toBe(
+              testCase.expected,
+            );
+          } else if (categoryGroup.category === 'unified_score') {
+            expect(score(testCase.input_a, testCase.input_b, testCase.metric)).toBeCloseTo(
+              testCase.expected,
+              10,
             );
           }
         });

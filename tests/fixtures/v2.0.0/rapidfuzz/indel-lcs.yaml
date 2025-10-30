@@ -1,0 +1,109 @@
+$schema: https://schemas.fulmenhq.dev/library/foundry/v2.0.0/similarity.schema.json
+version: 2025.10.3
+notes: |
+  Indel and LCS distance metrics
+  Reference implementation: rapidfuzz-rs 0.5.0
+test_cases:
+  - category: indel
+    cases:
+      - input_a: ''
+        input_b: ''
+        expected_distance: 0
+        expected_score: 1.0
+        description: Empty strings (identity)
+        tags:
+          - edge_case
+          - identity
+      - input_a: hello
+        input_b: hello
+        expected_distance: 0
+        expected_score: 1.0
+        description: Identical strings
+        tags:
+          - identity
+      - input_a: kitten
+        input_b: sitting
+        expected_distance: 5
+        expected_score: 0.6153846153846154
+        description: Multiple insertions/deletions (no substitutions allowed)
+        tags:
+          - standard
+      - input_a: hello
+        input_b: hallo
+        expected_distance: 2
+        expected_score: 0.8
+        description: Single character change (counted as delete + insert)
+        tags:
+          - standard
+      - input_a: abc
+        input_b: xyz
+        expected_distance: 6
+        expected_score: 0.0
+        description: Completely different (all chars replaced)
+        tags:
+          - edge_case
+      - input_a: a
+        input_b: ab
+        expected_distance: 1
+        expected_score: 0.6666666666666667
+        description: Single insertion
+        tags:
+          - insertion
+      - input_a: ab
+        input_b: a
+        expected_distance: 1
+        expected_score: 0.6666666666666667
+        description: Single deletion
+        tags:
+          - deletion
+  - category: lcs_seq
+    cases:
+      - input_a: ''
+        input_b: ''
+        expected_distance: 0
+        expected_similarity: 0
+        expected_score: 1.0
+        description: Empty strings
+        tags:
+          - edge_case
+          - identity
+      - input_a: hello
+        input_b: hello
+        expected_distance: 0
+        expected_similarity: 5
+        expected_score: 1.0
+        description: Identical strings (LCS = full length)
+        tags:
+          - identity
+      - input_a: kitten
+        input_b: sitting
+        expected_distance: 3
+        expected_similarity: 4
+        expected_score: 0.5714285714285714
+        description: Classic example (LCS = "ittn")
+        tags:
+          - standard
+      - input_a: AGGTAB
+        input_b: GXTXAYB
+        expected_distance: 3
+        expected_similarity: 4
+        expected_score: 0.5714285714285714
+        description: Classic LCS example (LCS = "GTAB")
+        tags:
+          - standard
+      - input_a: abc
+        input_b: xyz
+        expected_distance: 3
+        expected_similarity: 0
+        expected_score: 0.0
+        description: No common subsequence
+        tags:
+          - edge_case
+      - input_a: ABCDGH
+        input_b: AEDFHR
+        expected_distance: 3
+        expected_similarity: 3
+        expected_score: 0.5
+        description: LCS = "ADH"
+        tags:
+          - standard

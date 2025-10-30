@@ -1,0 +1,84 @@
+$schema: https://schemas.fulmenhq.dev/library/foundry/v2.0.0/similarity.schema.json
+version: 2025.10.3
+notes: |
+  RapidFuzz ratio() metric test cases
+  Tests the 0-100 scale fix (was returning 0-1)
+  Reference implementation: rapidfuzz-rs 0.5.0 (scaled to 0-100)
+test_cases:
+  - category: ratio
+    cases:
+      - input_a: ''
+        input_b: ''
+        expected_ratio: 100.0
+        description: Empty strings (identity)
+        tags:
+          - edge_case
+          - identity
+      - input_a: hello
+        input_b: hello
+        expected_ratio: 100.0
+        description: Identical strings
+        tags:
+          - identity
+      - input_a: kitten
+        input_b: sitting
+        expected_ratio: 61.53846153846154
+        description: Classic Levenshtein example (scale verification)
+        tags:
+          - standard
+          - scale_fix
+      - input_a: hello
+        input_b: world
+        expected_ratio: 20.0
+        description: Completely different strings
+        tags:
+          - standard
+      - input_a: abc
+        input_b: xyz
+        expected_ratio: 0.0
+        description: No common characters
+        tags:
+          - edge_case
+      - input_a: hello
+        input_b: hallo
+        expected_ratio: 80.0
+        description: Single character difference
+        tags:
+          - standard
+      - input_a: The quick brown fox
+        input_b: The quick brown fox
+        expected_ratio: 100.0
+        description: Multi-word identical
+        tags:
+          - identity
+      - input_a: The quick brown fox
+        input_b: The slow brown fox
+        expected_ratio: 75.67567567567568
+        description: Multi-word with difference
+        tags:
+          - standard
+      - input_a: a
+        input_b: a
+        expected_ratio: 100.0
+        description: Single character match
+        tags:
+          - edge_case
+      - input_a: a
+        input_b: b
+        expected_ratio: 0.0
+        description: Single character mismatch
+        tags:
+          - edge_case
+      - input_a: 你好
+        input_b: 你好
+        expected_ratio: 100.0
+        description: Unicode (Chinese) identity
+        tags:
+          - unicode
+          - identity
+      - input_a: 你好
+        input_b: 您好
+        expected_ratio: 50.0
+        description: Unicode (Chinese) partial match
+        tags:
+          - unicode

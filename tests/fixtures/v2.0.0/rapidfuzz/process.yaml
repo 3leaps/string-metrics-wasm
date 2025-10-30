@@ -1,0 +1,125 @@
+$schema: https://schemas.fulmenhq.dev/library/foundry/v2.0.0/similarity.schema.json
+version: 2025.10.3
+notes: |
+  Process module helpers for finding best matches
+  Reference: Python rapidfuzz 3.x process module patterns
+test_cases:
+  - category: extract_one
+    cases:
+      - query: 'new york jets'
+        choices:
+          - 'New York Jets'
+          - 'New York Giants'
+          - 'Atlanta Falcons'
+        expected_choice: 'New York Jets'
+        expected_index: 0
+        score_cutoff: 0
+        description: Best match with case difference
+        tags:
+          - standard
+      - query: 'jets'
+        choices:
+          - 'New York Jets'
+          - 'Dallas Cowboys'
+          - 'Atlanta Falcons'
+        expected_choice: 'New York Jets'
+        expected_index: 0
+        score_cutoff: 0
+        description: Substring match
+        tags:
+          - substring
+      - query: 'nonexistent'
+        choices:
+          - 'hello'
+          - 'world'
+          - 'test'
+        expected_choice: null
+        expected_index: null
+        score_cutoff: 90
+        description: No match above high cutoff
+        tags:
+          - cutoff
+          - edge_case
+      - query: 'test'
+        choices:
+          - 'test'
+          - 'testing'
+          - 'tester'
+        expected_choice: 'test'
+        expected_index: 0
+        score_cutoff: 0
+        description: Exact match preferred
+        tags:
+          - exact_match
+      - query: 'hello'
+        choices: []
+        expected_choice: null
+        expected_index: null
+        score_cutoff: 0
+        description: Empty choices array
+        tags:
+          - edge_case
+  - category: extract
+    cases:
+      - query: 'new york'
+        choices:
+          - 'New York Jets'
+          - 'New York Giants'
+          - 'Atlanta Falcons'
+          - 'Dallas Cowboys'
+        expected_results:
+          - { choice: 'New York Jets', index: 0 }
+          - { choice: 'New York Giants', index: 1 }
+        limit: 2
+        score_cutoff: 40
+        description: Top 2 matches with cutoff
+        tags:
+          - limit
+          - cutoff
+      - query: 'jets'
+        choices:
+          - 'New York Jets'
+          - 'Dallas Cowboys'
+          - 'Atlanta Falcons'
+          - 'Green Bay Packers'
+        expected_results:
+          - { choice: 'New York Jets', index: 0 }
+        limit: 5
+        score_cutoff: 30
+        description: Single match above cutoff
+        tags:
+          - cutoff
+      - query: 'hello'
+        choices:
+          - 'hello'
+          - 'hallo'
+          - 'hella'
+        expected_results:
+          - { choice: 'hello', index: 0 }
+          - { choice: 'hallo', index: 1 }
+          - { choice: 'hella', index: 2 }
+        limit: 10
+        score_cutoff: 0
+        description: All results (sorted by score)
+        tags:
+          - sorting
+      - query: 'test'
+        choices:
+          - 'one'
+          - 'two'
+          - 'three'
+        expected_results: []
+        limit: 5
+        score_cutoff: 80
+        description: No results above high cutoff
+        tags:
+          - cutoff
+          - edge_case
+      - query: 'hello'
+        choices: []
+        expected_results: []
+        limit: 5
+        score_cutoff: 0
+        description: Empty choices array
+        tags:
+          - edge_case
