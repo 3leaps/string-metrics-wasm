@@ -18,22 +18,39 @@ Instructions for maintainers releasing `@3leaps/string-metrics-wasm` to npm.
    - Major: `make bump-major`
    - Or explicit: `make set-version VERSION=x.y.z`
 3. Update CHANGELOG / release notes (if applicable).
-4. Run the test suite: `make test`.
-5. Verify the package payload (optional):
+4. **Run full pre-push validation** (`make prepush`):
+   - Ensures version sync, license compliance, code quality, tests, and fixture validation all pass
+5. **CRITICAL: Verify package contents and publish readiness BEFORE tagging**:
    ```bash
+   # Verify WASM files are included
+   npm pack --dry-run | grep pkg/web
+
+   # Verify prepublishOnly hook passes (runs make quality && make build)
    npm publish --dry-run
    ```
-6. **Publish with public access** (required for scoped packages):
+   **⚠️ DO THIS BEFORE STEP 6**: If either command fails, fix issues and commit. Only proceed to
+   tagging after verification succeeds.
+6. **Tag the release locally** (don't push yet):
+   ```bash
+   git tag -a vX.Y.Z -m "Release vX.Y.Z - brief description"
+   ```
+7. **Final verification**: Run `npm publish --dry-run` one more time to ensure tag doesn't break
+   anything.
+8. **Push tag to remote**:
+   ```bash
+   git push origin vX.Y.Z
+   ```
+9. **Publish with public access** (required for scoped packages):
    ```bash
    npm publish --access public
    ```
    **⚠️ IMPORTANT**: The `--access public` flag is **required** for scoped packages (@3leaps/...).
    Without it, npm defaults to private access, which requires a paid organization plan.
-7. Tag the release (`git tag vX.Y.Z && git push origin vX.Y.Z`) and create a GitHub release.
-8. Smoke-test the published version:
-   ```bash
-   npm install @3leaps/string-metrics-wasm@X.Y.Z
-   ```
+10. **Post-publish verification** - Smoke-test the published version:
+    ```bash
+    npm install @3leaps/string-metrics-wasm@X.Y.Z
+    ```
+11. Create GitHub release from tag with release notes.
 
 ## What `npm publish` Does
 
@@ -47,10 +64,13 @@ make quality && make build
 This ensures:
 
 - format/lint checks pass (Biome + Prettier)
-- Rust formatting/lints succeed (`cargo fmt --check`, `cargo clippy`)
+  - **Lint warnings treated as errors** (`--error-on-warnings` flag in Makefile)
+- TypeScript type checking passes (`tsc --noEmit`)
+- Rust formatting/lints succeed (`cargo fmt --check`, `cargo clippy -- -D warnings`)
 - WASM and TypeScript bundles are regenerated (`pkg/web/*`, `dist/*`)
 
-If any command fails, the publish is aborted.
+If any command fails, the publish is aborted. This gate prevents broken releases like v0.3.5 (missing
+WASM files) from reaching npm.
 
 ## Published Artifacts
 

@@ -156,7 +156,7 @@ format-check: rust-fmt-check
 
 lint:
 	@echo "Linting TypeScript with Biome..."
-	@npx biome lint .
+	@npx biome lint --error-on-warnings .
 	@echo "✅ Lint complete"
 
 lint-fix:

@@ -12,24 +12,21 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ### Fixed
 
 - **🔴 CRITICAL: WASM files missing from published package** (v0.3.5 broken)
-  - Root cause: wasm-pack creates `pkg/web/.gitignore` with `*` (ignore everything), which npm
-    respects even when `pkg/web` is explicitly listed in package.json `files` array
-  - Added `scripts/prepare-wasm-package.js` to remove `pkg/web/.gitignore` after wasm-pack build
+  - Added `scripts/prepare-wasm-package.js` to clean up build artifacts blocking npm packaging
   - Updated `build:wasm` script to run cleanup automatically
-  - Verified with `npm pack --dry-run` - WASM bundle now included (231 kB)
-  - **Impact**: v0.3.5 was unusable - imports failed immediately with "Cannot find module
-    '../pkg/web/string_metrics_wasm.js'"
+  - **Impact**: v0.3.5 was unusable - imports failed immediately
+- **Lint enforcement**
+  - Fixed type assertions in test suite
+  - Updated Makefile to treat lint warnings as errors
 
 ### Changed
 
-- **Documentation improvements**
-  - Added badges to README.md (npm version, downloads, license, tests)
+- **Documentation**
+  - Added badges to README.md
   - Created docs/README.md as documentation hub
-  - Updated README.md with current test counts (119 tests, 114 fixture validations)
-- **Build process enhancement**
-  - `build:wasm` now runs `wasm-pack` → `prepare-wasm-package.js` (cleanup) → ready for packaging
-  - Removed `.npmignore` approach (didn't solve nested gitignore issue)
-  - Explicit `files` array in package.json: `["dist", "pkg/web", "src", "docs", ...]`
+  - Updated docs/publishing.md with verification workflow
+- **Code quality**
+  - Replaced generic type assertions with specific types in tests
 
 [0.3.6]: https://github.com/3leaps/string-metrics-wasm/compare/v0.3.5...v0.3.6
 

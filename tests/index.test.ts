@@ -26,6 +26,10 @@ import {
   suggest,
   tokenSetRatio,
   tokenSortRatio,
+  type NormalizationPreset,
+  type DistanceMetric,
+  type SimilarityMetric,
+  type SuggestMetric,
 } from '../src/index';
 
 // Version consistency test
@@ -269,12 +273,12 @@ for (const document of fixtureDocuments) {
             }
           } else if (categoryGroup.category === 'normalization_presets') {
             const tc = testCase as NormalizationTestCase;
-            expect(normalize(tc.input, tc.preset as any)).toBe(tc.expected);
+            expect(normalize(tc.input, tc.preset as NormalizationPreset)).toBe(tc.expected);
           } else if (categoryGroup.category === 'suggestions') {
             const tc = testCase as SuggestionTestCase;
             const result = suggest(tc.input, tc.candidates, {
-              metric: toCamelCaseMetric(tc.options.metric) as any,
-              preset: (tc.options.normalize_preset ?? tc.options.preset) as any,
+              metric: toCamelCaseMetric(tc.options.metric) as SuggestMetric,
+              preset: (tc.options.normalize_preset ?? tc.options.preset) as NormalizationPreset,
               minScore: tc.options.min_score,
               maxSuggestions: tc.options.max_suggestions,
               preferPrefix: tc.options.prefer_prefix,
@@ -344,15 +348,14 @@ for (const document of fixtureDocuments) {
             });
           } else if (categoryGroup.category === 'unified_distance') {
             const tc = testCase as UnifiedDistanceTestCase;
-            expect(distance(tc.input_a, tc.input_b, toCamelCaseMetric(tc.metric) as any)).toBe(
-              tc.expected,
-            );
+            expect(
+              distance(tc.input_a, tc.input_b, toCamelCaseMetric(tc.metric) as DistanceMetric),
+            ).toBe(tc.expected);
           } else if (categoryGroup.category === 'unified_score') {
             const tc = testCase as UnifiedScoreTestCase;
-            expect(score(tc.input_a, tc.input_b, toCamelCaseMetric(tc.metric) as any)).toBeCloseTo(
-              tc.expected,
-              10,
-            );
+            expect(
+              score(tc.input_a, tc.input_b, toCamelCaseMetric(tc.metric) as SimilarityMetric),
+            ).toBeCloseTo(tc.expected, 10);
           }
         });
       }
