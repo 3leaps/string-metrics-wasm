@@ -47,15 +47,15 @@ const suggestions = suggest(userInput, candidates, options);
 
 ### Options
 
-| Option              | Type      | Default          | Description                                                                                            |
-| ------------------- | --------- | ---------------- | ------------------------------------------------------------------------------------------------------ |
-| `min_score`         | `number`  | `0.6`            | Score threshold (0.0-1.0). Balance precision vs. recall                                                |
-| `max_suggestions`   | `number`  | `5`              | Limit results to avoid overwhelming users                                                              |
-| `metric`            | `string`  | `'jaro_winkler'` | Algorithm: `'levenshtein'`, `'damerau_osa'`, `'damerau_unrestricted'`, `'jaro_winkler'`, `'substring'` |
-| `normalize_preset`  | `string`  | `'default'`      | Text normalization: `'none'`, `'minimal'`, `'default'`, `'aggressive'`                                 |
-| `prefer_prefix`     | `boolean` | `false`          | Boost scores for prefix matches by 10%                                                                 |
-| `jaro_prefix_scale` | `number`  | `0.1`            | Jaro-Winkler prefix scaling (only for `jaro_winkler` metric)                                           |
-| `jaro_max_prefix`   | `number`  | `4`              | Max prefix length for Jaro-Winkler (only for `jaro_winkler` metric)                                    |
+| Option            | Type      | Default         | Description                                                                                         |
+| ----------------- | --------- | --------------- | --------------------------------------------------------------------------------------------------- |
+| `minScore`        | `number`  | `0.6`           | Score threshold (0.0-1.0). Balance precision vs. recall                                             |
+| `maxSuggestions`  | `number`  | `5`             | Limit results to avoid overwhelming users                                                           |
+| `metric`          | `string`  | `'jaroWinkler'` | Algorithm: `'levenshtein'`, `'damerauOsa'`, `'damerauUnrestricted'`, `'jaroWinkler'`, `'substring'` |
+| `normalizePreset` | `string`  | `'default'`     | Text normalization: `'none'`, `'minimal'`, `'default'`, `'aggressive'`                              |
+| `preferPrefix`    | `boolean` | `false`         | Boost scores for prefix matches by 10%                                                              |
+| `jaroPrefixScale` | `number`  | `0.1`           | Jaro-Winkler prefix scaling (only for `jaroWinkler` metric)                                         |
+| `jaroMaxPrefix`   | `number`  | `4`             | Max prefix length for Jaro-Winkler (only for `jaroWinkler` metric)                                  |
 
 ### Return Value
 
@@ -70,7 +70,7 @@ interface Suggestion {
     start: number;
     end: number;
   };
-  normalized_value?: string; // Optional: result after normalization
+  normalizedValue?: string; // Optional: result after normalization
   reason?: string; // Optional: explanation (e.g., "prefix_bonus")
 }
 ```
@@ -132,9 +132,9 @@ const userInput = 'docscrib';
 const commands = ['docscribe', 'crucible-shim', 'config-path-api', 'foundry'];
 
 const suggestions = suggest(userInput, commands, {
-  min_score: 0.6,
+  minScore: 0.6,
   metric: 'levenshtein',
-  normalize_preset: 'default',
+  normalizePreset: 'default',
 });
 
 console.log(suggestions);
@@ -150,10 +150,10 @@ const userInput = 'schem';
 const paths = ['schemas', 'schema-validation', 'config-path-api'];
 
 const suggestions = suggest(userInput, paths, {
-  min_score: 0.5,
-  max_suggestions: 2,
+  minScore: 0.5,
+  maxSuggestions: 2,
   metric: 'substring',
-  normalize_preset: 'default',
+  normalizePreset: 'default',
 });
 
 console.log(suggestions);
@@ -173,10 +173,10 @@ const userInput = 'Café';
 const options = ['café', 'cache', 'config'];
 
 const suggestions = suggest(userInput, options, {
-  min_score: 0.6,
-  max_suggestions: 2,
+  minScore: 0.6,
+  maxSuggestions: 2,
   metric: 'levenshtein',
-  normalize_preset: 'aggressive', // Strips accents
+  normalizePreset: 'aggressive', // Strips accents
 });
 
 console.log(suggestions);
@@ -195,11 +195,11 @@ const userInput = 'test';
 const candidates = ['testing', 'tested', 'best'];
 
 const suggestions = suggest(userInput, candidates, {
-  min_score: 0.6,
-  max_suggestions: 3,
-  metric: 'jaro_winkler',
-  normalize_preset: 'default',
-  prefer_prefix: true, // Boost prefix matches by 10%
+  minScore: 0.6,
+  maxSuggestions: 3,
+  metric: 'jaroWinkler',
+  normalizePreset: 'default',
+  preferPrefix: true, // Boost prefix matches by 10%
 });
 
 console.log(suggestions);
@@ -221,10 +221,10 @@ Balance precision (fewer, better matches) vs. recall (more matches):
 
 ```typescript
 // High precision: Only very close matches
-const strict = suggest(input, candidates, { min_score: 0.9 });
+const strict = suggest(input, candidates, { minScore: 0.9 });
 
 // High recall: Include distant matches
-const lenient = suggest(input, candidates, { min_score: 0.4 });
+const lenient = suggest(input, candidates, { minScore: 0.4 });
 ```
 
 ### Combining Metrics
@@ -234,15 +234,15 @@ For complex scenarios, you can run multiple suggestion queries:
 ```typescript
 // Try exact/prefix first, then fuzzy
 const exactMatches = suggest(input, candidates, {
-  metric: 'jaro_winkler',
-  prefer_prefix: true,
-  min_score: 0.9,
+  metric: 'jaroWinkler',
+  preferPrefix: true,
+  minScore: 0.9,
 });
 
 if (exactMatches.length === 0) {
   const fuzzyMatches = suggest(input, candidates, {
     metric: 'levenshtein',
-    min_score: 0.6,
+    minScore: 0.6,
   });
 }
 ```
@@ -268,16 +268,16 @@ library for cross-language test fixture validation.
 
 ## Performance Tips
 
-1. **Choose the right metric**: `damerau_osa` is fastest for interactive use
+1. **Choose the right metric**: `damerauOsa` is fastest for interactive use
 2. **Limit candidates**: Pre-filter candidates when possible
-3. **Adjust `max_suggestions`**: Fewer results = faster response
+3. **Adjust `maxSuggestions`**: Fewer results = faster response
 4. **Use appropriate normalization**: `'none'` is fastest, `'aggressive'` is slowest
 
 ## Troubleshooting
 
 ### No suggestions returned
 
-- Check `min_score` threshold (try lowering it)
+- Check `minScore` threshold (try lowering it)
 - Verify candidates array is not empty
 - Check normalization preset (aggressive preset may normalize away differences)
 
@@ -285,7 +285,7 @@ library for cross-language test fixture validation.
 
 - Try different metrics (e.g., `substring` for partial matches)
 - Adjust normalization preset
-- Enable `prefer_prefix` for command-like inputs
+- Enable `preferPrefix` for command-like inputs
 
 ### Score seems wrong
 

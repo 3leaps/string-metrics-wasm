@@ -60,7 +60,7 @@ const best = extractOne('new york', choices);
 console.log(best); // { choice: 'New York Jets', score: 57.14, index: 1 }
 
 // Unified scoring API (0-1 scale)
-const similarity = score('hello', 'world', 'jaro_winkler');
+const similarity = score('hello', 'world', 'jaroWinkler');
 console.log(similarity); // 0.4666...
 ```
 
@@ -202,11 +202,11 @@ Find the single best match.
 
 - `scorer?: (a: string, b: string) => number` - Scoring function (default: `ratio`)
 - `processor?: (str: string) => string` - Preprocessing function
-- `score_cutoff?: number` - Minimum score threshold (default: 0)
+- `scoreCutoff?: number` - Minimum score threshold (default: 0)
 
 ```typescript
 const choices = ['Atlanta Falcons', 'New York Jets', 'Dallas Cowboys'];
-const best = extractOne('jets', choices, { score_cutoff: 30 });
+const best = extractOne('jets', choices, { scoreCutoff: 30 });
 // { choice: 'New York Jets', score: 35.29, index: 1 }
 ```
 
@@ -218,11 +218,11 @@ Find top N matches (sorted by score).
 
 - `scorer?: (a: string, b: string) => number` - Scoring function
 - `processor?: (str: string) => string` - Preprocessing function
-- `score_cutoff?: number` - Minimum score threshold
+- `scoreCutoff?: number` - Minimum score threshold
 - `limit?: number` - Maximum results to return
 
 ```typescript
-const results = extract('new york', choices, { limit: 2, score_cutoff: 40 });
+const results = extract('new york', choices, { limit: 2, scoreCutoff: 40 });
 // [
 //   { choice: 'New York Jets', score: 57.14, index: 1 },
 //   { choice: 'New York Giants', score: 52.17, index: 2 }
@@ -237,8 +237,8 @@ Metric-selectable interface with consistent scales:
 
 Calculate edit distance using any metric (returns raw distance).
 
-**Supported metrics:** `'levenshtein'` (default), `'damerau_levenshtein'`, `'osa'`, `'indel'`,
-`'lcs_seq'`
+**Supported metrics:** `'levenshtein'` (default), `'damerauLevenshtein'`, `'osa'`, `'indel'`,
+`'lcsSeq'`
 
 ```typescript
 distance('hello', 'world'); // 4 (default: levenshtein)
@@ -249,13 +249,12 @@ distance('hello', 'world', 'indel'); // 8
 
 Calculate similarity using any metric (returns 0-1 normalized score).
 
-**Supported metrics:** `'jaro_winkler'` (default), `'levenshtein'`, `'damerau_levenshtein'`,
-`'osa'`, `'jaro'`, `'indel'`, `'lcs_seq'`, `'ratio'`, `'partial_ratio'`, `'token_sort_ratio'`,
-`'token_set_ratio'`
+**Supported metrics:** `'jaroWinkler'` (default), `'levenshtein'`, `'damerauLevenshtein'`, `'osa'`,
+`'jaro'`, `'indel'`, `'lcsSeq'`, `'ratio'`, `'partialRatio'`, `'tokenSortRatio'`, `'tokenSetRatio'`
 
 ```typescript
-score('hello', 'world'); // 0.4666... (default: jaro_winkler)
-score('new york mets', 'mets york new', 'token_sort_ratio'); // 1.0
+score('hello', 'world'); // 0.4666... (default: jaroWinkler)
+score('new york mets', 'mets york new', 'tokenSortRatio'); // 1.0
 ```
 
 ### Normalization & Suggestions
@@ -276,9 +275,9 @@ Get ranked suggestions with detailed scoring.
 
 ```typescript
 const suggestions = suggest('pythn', ['python', 'java', 'javascript'], {
-  metric: 'jaro_winkler',
-  min_score: 0.6,
-  max_suggestions: 3,
+  metric: 'jaroWinkler',
+  minScore: 0.6,
+  maxSuggestions: 3,
 });
 // [
 //   { value: 'python', score: 0.9555, ... },

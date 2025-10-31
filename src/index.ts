@@ -226,7 +226,7 @@ export type ScorerFunction = (a: string, b: string) => number;
 export interface ExtractOptions {
   scorer?: ScorerFunction;
   processor?: (str: string) => string;
-  score_cutoff?: number;
+  scoreCutoff?: number;
   limit?: number;
 }
 
@@ -245,7 +245,7 @@ export function extractOne(
   choices: string[],
   options: ExtractOptions = {},
 ): ExtractResult | null {
-  const { scorer = ratio, processor = (s) => s, score_cutoff = 0 } = options;
+  const { scorer = ratio, processor = (s) => s, scoreCutoff = 0 } = options;
 
   if (choices.length === 0) {
     return null;
@@ -260,7 +260,7 @@ export function extractOne(
     const processedChoice = processor(choice);
     const score = scorer(processedQuery, processedChoice);
 
-    if (score >= score_cutoff && score > bestScore) {
+    if (score >= scoreCutoff && score > bestScore) {
       bestScore = score;
       bestMatch = {
         choice,
@@ -282,7 +282,7 @@ export function extract(
   choices: string[],
   options: ExtractOptions = {},
 ): ExtractResult[] {
-  const { scorer = ratio, processor = (s) => s, score_cutoff = 0, limit } = options;
+  const { scorer = ratio, processor = (s) => s, scoreCutoff = 0, limit } = options;
 
   if (choices.length === 0) {
     return [];
@@ -296,7 +296,7 @@ export function extract(
     const processedChoice = processor(choice);
     const score = scorer(processedQuery, processedChoice);
 
-    if (score >= score_cutoff) {
+    if (score >= scoreCutoff) {
       results.push({
         choice,
         score,
@@ -316,20 +316,20 @@ export function extract(
 // Unified API - Metric-selectable distance and scoring
 // ============================================================================
 
-export type DistanceMetric = 'levenshtein' | 'damerau_levenshtein' | 'osa' | 'indel' | 'lcs_seq';
+export type DistanceMetric = 'levenshtein' | 'damerauLevenshtein' | 'osa' | 'indel' | 'lcsSeq';
 
 export type SimilarityMetric =
   | 'levenshtein'
-  | 'damerau_levenshtein'
+  | 'damerauLevenshtein'
   | 'osa'
   | 'jaro'
-  | 'jaro_winkler'
+  | 'jaroWinkler'
   | 'indel'
-  | 'lcs_seq'
+  | 'lcsSeq'
   | 'ratio'
-  | 'partial_ratio'
-  | 'token_sort_ratio'
-  | 'token_set_ratio';
+  | 'partialRatio'
+  | 'tokenSortRatio'
+  | 'tokenSetRatio';
 
 /**
  * Calculate edit distance between two strings using the specified metric
@@ -344,13 +344,13 @@ export function distance(a: string, b: string, metric: DistanceMetric = 'levensh
   switch (metric) {
     case 'levenshtein':
       return levenshtein(a, b);
-    case 'damerau_levenshtein':
+    case 'damerauLevenshtein':
       return damerau_levenshtein(a, b);
     case 'osa':
       return osa_distance(a, b);
     case 'indel':
       return indel_distance(a, b);
-    case 'lcs_seq':
+    case 'lcsSeq':
       return lcs_seq_distance(a, b);
     default:
       throw new Error(`Unknown distance metric: ${metric}`);
@@ -363,32 +363,32 @@ export function distance(a: string, b: string, metric: DistanceMetric = 'levensh
  *
  * @param a First string
  * @param b Second string
- * @param metric Similarity metric to use (default: 'jaro_winkler')
+ * @param metric Similarity metric to use (default: 'jaroWinkler')
  * @returns Similarity score (0.0-1.0)
  */
-export function score(a: string, b: string, metric: SimilarityMetric = 'jaro_winkler'): number {
+export function score(a: string, b: string, metric: SimilarityMetric = 'jaroWinkler'): number {
   switch (metric) {
     case 'levenshtein':
       return normalized_levenshtein(a, b);
-    case 'damerau_levenshtein':
+    case 'damerauLevenshtein':
       return normalized_damerau_levenshtein(a, b);
     case 'osa':
       return normalized_osa_similarity(a, b);
     case 'jaro':
       return jaro(a, b);
-    case 'jaro_winkler':
+    case 'jaroWinkler':
       return jaro_winkler(a, b);
     case 'indel':
       return indel_normalized_similarity(a, b);
-    case 'lcs_seq':
+    case 'lcsSeq':
       return lcs_seq_normalized_similarity(a, b);
     case 'ratio':
       return ratio(a, b) / 100; // Convert 0-100 to 0-1
-    case 'partial_ratio':
+    case 'partialRatio':
       return partialRatio(a, b) / 100; // Convert 0-100 to 0-1
-    case 'token_sort_ratio':
+    case 'tokenSortRatio':
       return tokenSortRatio(a, b) / 100; // Convert 0-100 to 0-1
-    case 'token_set_ratio':
+    case 'tokenSetRatio':
       return tokenSetRatio(a, b) / 100; // Convert 0-100 to 0-1
     default:
       throw new Error(`Unknown similarity metric: ${metric}`);
@@ -443,34 +443,34 @@ export function substringSimilarity(query: string, candidate: string): Substring
 
 export type SuggestMetric =
   | 'levenshtein'
-  | 'damerau_osa'
-  | 'damerau_unrestricted'
+  | 'damerauOsa'
+  | 'damerauUnrestricted'
   | 'jaro'
-  | 'jaro_winkler'
+  | 'jaroWinkler'
   | 'substring'
   | 'ratio'
-  | 'partial_ratio'
-  | 'token_sort_ratio'
-  | 'token_set_ratio'
+  | 'partialRatio'
+  | 'tokenSortRatio'
+  | 'tokenSetRatio'
   | 'indel'
-  | 'lcs_seq';
+  | 'lcsSeq';
 
 export interface SuggestionOptions {
   metric?: SuggestMetric;
   preset?: NormalizationPreset;
-  normalize_preset?: NormalizationPreset;
-  min_score?: number;
-  max_suggestions?: number;
-  prefer_prefix?: boolean;
-  jaro_prefix_scale?: number;
-  jaro_max_prefix?: number;
+  normalizePreset?: NormalizationPreset;
+  minScore?: number;
+  maxSuggestions?: number;
+  preferPrefix?: boolean;
+  jaroPrefixScale?: number;
+  jaroMaxPrefix?: number;
 }
 
 export interface Suggestion {
   value: string;
   score: number;
   matchedRange?: { start: number; end: number };
-  normalized_value?: string;
+  normalizedValue?: string;
   reason?: string;
 }
 
@@ -485,11 +485,11 @@ const computeSimilarity = (
       const score = normalized_levenshtein(query, candidate);
       return { score, explanation: `normalized_levenshtein=${score.toFixed(4)}` };
     }
-    case 'damerau_osa': {
+    case 'damerauOsa': {
       const score = normalized_osa_similarity(query, candidate);
       return { score, explanation: `normalized_osa_similarity=${score.toFixed(4)}` };
     }
-    case 'damerau_unrestricted': {
+    case 'damerauUnrestricted': {
       const score = normalized_damerau_levenshtein(query, candidate);
       return { score, explanation: `normalized_damerau_levenshtein=${score.toFixed(4)}` };
     }
@@ -497,7 +497,7 @@ const computeSimilarity = (
       const score = jaro(query, candidate);
       return { score, explanation: `jaro=${score.toFixed(4)}` };
     }
-    case 'jaro_winkler': {
+    case 'jaroWinkler': {
       const score = jaro_winkler_custom(query, candidate, {
         prefix_scale: jaroOptions.prefixScale,
         max_prefix: jaroOptions.maxPrefix,
@@ -520,17 +520,17 @@ const computeSimilarity = (
       const score = rawScore / 100; // Convert 0-100 to 0-1
       return { score, explanation: `ratio=${score.toFixed(4)}` };
     }
-    case 'partial_ratio': {
+    case 'partialRatio': {
       const rawScore = partialRatio(query, candidate);
       const score = rawScore / 100; // Convert 0-100 to 0-1
       return { score, explanation: `partial_ratio=${score.toFixed(4)}` };
     }
-    case 'token_sort_ratio': {
+    case 'tokenSortRatio': {
       const rawScore = tokenSortRatio(query, candidate);
       const score = rawScore / 100; // Convert 0-100 to 0-1
       return { score, explanation: `token_sort_ratio=${score.toFixed(4)}` };
     }
-    case 'token_set_ratio': {
+    case 'tokenSetRatio': {
       const rawScore = tokenSetRatio(query, candidate);
       const score = rawScore / 100; // Convert 0-100 to 0-1
       return { score, explanation: `token_set_ratio=${score.toFixed(4)}` };
@@ -539,7 +539,7 @@ const computeSimilarity = (
       const score = indel_normalized_similarity(query, candidate);
       return { score, explanation: `indel_normalized_similarity=${score.toFixed(4)}` };
     }
-    case 'lcs_seq': {
+    case 'lcsSeq': {
       const score = lcs_seq_normalized_similarity(query, candidate);
       return { score, explanation: `lcs_seq_normalized_similarity=${score.toFixed(4)}` };
     }
@@ -554,17 +554,17 @@ export function suggest(
   options: SuggestionOptions = {},
 ): Suggestion[] {
   const {
-    metric = 'jaro_winkler',
+    metric = 'jaroWinkler',
     preset: presetOption,
-    normalize_preset: legacyPreset,
-    min_score = 0.6,
-    max_suggestions = 5,
-    prefer_prefix = false,
-    jaro_prefix_scale = 0.1,
-    jaro_max_prefix = 4,
+    normalizePreset: normalizePresetOption,
+    minScore = 0.6,
+    maxSuggestions = 5,
+    preferPrefix = false,
+    jaroPrefixScale = 0.1,
+    jaroMaxPrefix = 4,
   } = options;
 
-  const preset = presetOption ?? legacyPreset ?? 'default';
+  const preset = presetOption ?? normalizePresetOption ?? 'default';
 
   const normQuery = normalize(rawQuery, preset);
 
@@ -575,15 +575,15 @@ export function suggest(
       normQuery,
       normCandidate,
       {
-        prefixScale: jaro_prefix_scale,
-        maxPrefix: jaro_max_prefix,
+        prefixScale: jaroPrefixScale,
+        maxPrefix: jaroMaxPrefix,
       },
     );
 
     let finalScore = score;
     const reasons = [explanation];
 
-    if (prefer_prefix && normCandidate.startsWith(normQuery)) {
+    if (preferPrefix && normCandidate.startsWith(normQuery)) {
       const bonusWeight = 0.1;
       finalScore = Math.min(1, finalScore + (1 - finalScore) * bonusWeight);
       reasons.push('prefix_bonus');
@@ -592,14 +592,14 @@ export function suggest(
     return {
       value: candidate,
       score: finalScore,
-      normalized_value: normCandidate,
+      normalizedValue: normCandidate,
       matchedRange,
       reason: reasons.join(', '),
     };
   });
 
   return scored
-    .filter((entry) => entry.score >= min_score)
+    .filter((entry) => entry.score >= minScore)
     .sort((a, b) => b.score - a.score)
-    .slice(0, max_suggestions);
+    .slice(0, maxSuggestions);
 }

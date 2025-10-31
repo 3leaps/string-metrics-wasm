@@ -51,6 +51,21 @@ interface FixtureDocument {
   }>;
 }
 
+// Helper to convert snake_case metric names from fixtures to camelCase for API
+function toCamelCaseMetric(snakeCase: string): string {
+  const mapping: Record<string, string> = {
+    damerau_levenshtein: 'damerauLevenshtein',
+    damerau_osa: 'damerauOsa',
+    damerau_unrestricted: 'damerauUnrestricted',
+    jaro_winkler: 'jaroWinkler',
+    lcs_seq: 'lcsSeq',
+    partial_ratio: 'partialRatio',
+    token_sort_ratio: 'tokenSortRatio',
+    token_set_ratio: 'tokenSetRatio',
+  };
+  return mapping[snakeCase] || snakeCase;
+}
+
 const fixturesRoot = path.join(__dirname, 'fixtures');
 
 if (!fs.existsSync(fixturesRoot)) {
@@ -147,13 +162,13 @@ for (const document of fixtureDocuments) {
             expect(normalize(testCase.input, testCase.preset)).toBe(testCase.expected);
           } else if (categoryGroup.category === 'suggestions') {
             const result = suggest(testCase.input, testCase.candidates, {
-              metric: testCase.options.metric,
+              metric: toCamelCaseMetric(testCase.options.metric),
               preset: testCase.options.normalize_preset ?? testCase.options.preset,
-              min_score: testCase.options.min_score,
-              max_suggestions: testCase.options.max_suggestions,
-              prefer_prefix: testCase.options.prefer_prefix,
-              jaro_prefix_scale: testCase.options.jaro_prefix_scale,
-              jaro_max_prefix: testCase.options.jaro_max_prefix,
+              minScore: testCase.options.min_score,
+              maxSuggestions: testCase.options.max_suggestions,
+              preferPrefix: testCase.options.prefer_prefix,
+              jaroPrefixScale: testCase.options.jaro_prefix_scale,
+              jaroMaxPrefix: testCase.options.jaro_max_prefix,
             });
             expect(result).toHaveLength(testCase.expected.length);
             testCase.expected.forEach(
@@ -172,7 +187,7 @@ for (const document of fixtureDocuments) {
                   expect(result[i].matchedRange).toEqual(exp.matched_range);
                 }
                 if (exp.normalized_value) {
-                  expect(result[i].normalized_value).toBe(exp.normalized_value);
+                  expect(result[i].normalizedValue).toBe(exp.normalized_value);
                 }
               },
             );
@@ -217,7 +232,7 @@ for (const document of fixtureDocuments) {
             );
           } else if (categoryGroup.category === 'extract_one') {
             const result = extractOne(testCase.query, testCase.choices, {
-              score_cutoff: testCase.score_cutoff ?? 0,
+              scoreCutoff: testCase.score_cutoff ?? 0,
             });
             if (testCase.expected_choice === null) {
               expect(result).toBeNull();
@@ -228,7 +243,7 @@ for (const document of fixtureDocuments) {
             }
           } else if (categoryGroup.category === 'extract') {
             const result = extract(testCase.query, testCase.choices, {
-              score_cutoff: testCase.score_cutoff ?? 0,
+              scoreCutoff: testCase.score_cutoff ?? 0,
               limit: testCase.limit,
             });
             expect(result).toHaveLength(testCase.expected_results.length);
@@ -239,14 +254,13 @@ for (const document of fixtureDocuments) {
               },
             );
           } else if (categoryGroup.category === 'unified_distance') {
-            expect(distance(testCase.input_a, testCase.input_b, testCase.metric)).toBe(
-              testCase.expected,
-            );
+            expect(
+              distance(testCase.input_a, testCase.input_b, toCamelCaseMetric(testCase.metric)),
+            ).toBe(testCase.expected);
           } else if (categoryGroup.category === 'unified_score') {
-            expect(score(testCase.input_a, testCase.input_b, testCase.metric)).toBeCloseTo(
-              testCase.expected,
-              10,
-            );
+            expect(
+              score(testCase.input_a, testCase.input_b, toCamelCaseMetric(testCase.metric)),
+            ).toBeCloseTo(testCase.expected, 10);
           }
         });
       }
