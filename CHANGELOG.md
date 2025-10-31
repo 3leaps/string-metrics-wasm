@@ -7,6 +7,18 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.3.5] - 2025-10-31
+
+### Changed
+
+- **Package scope** - Changed package name from `string-metrics-wasm` to
+  `@3leaps/string-metrics-wasm`
+  - Install with: `npm install @3leaps/string-metrics-wasm`
+  - Import unchanged: `import { ... } from '@3leaps/string-metrics-wasm'`
+  - Published under 3leaps organization on npm
+
+[0.3.5]: https://github.com/3leaps/string-metrics-wasm/compare/v0.3.4...v0.3.5
+
 ## [0.3.4] - 2025-10-31
 
 ### Added
