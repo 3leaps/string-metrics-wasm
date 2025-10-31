@@ -25,8 +25,8 @@ help:
 	@echo "  make rust-clippy    - Run Clippy linter on Rust code"
 	@echo ""
 	@echo "Git hooks:"
-	@echo "  make precommit      - Run pre-commit checks (format, lint, typecheck, rust)"
-	@echo "  make prepush        - Run pre-push validation (version, license, quality, build, test)"
+	@echo "  make precommit      - Run pre-commit checks (format, lint, typecheck, rust, build, test, validate)"
+	@echo "  make prepush        - Run pre-push validation (clean check, version, license, precommit)"
 	@echo ""
 	@echo "Fixture validation:"
 	@echo "  make build-validator      - Build similarity-validator (current platform)"
@@ -193,6 +193,9 @@ precommit:
 	@$(MAKE) typecheck
 	@$(MAKE) rust-fmt
 	@$(MAKE) rust-clippy
+	@$(MAKE) build
+	@$(MAKE) test
+	@$(MAKE) validate-fixtures
 	@echo "✅ All pre-commit checks passed!"
 
 prepush:
@@ -206,10 +209,7 @@ prepush:
 	@echo "✅ Working tree is clean"
 	@$(MAKE) version-check
 	@npm run license:check || { echo "❌ License check failed"; exit 1; }
-	@$(MAKE) quality
-	@$(MAKE) build
-	@$(MAKE) test
-	@$(MAKE) validate-fixtures
+	@$(MAKE) precommit
 	@if [ -n "$$(git status --porcelain)" ]; then \
 		echo "❌ Working tree was modified during validation. This indicates a build artifact or hook issue."; \
 		echo ""; \

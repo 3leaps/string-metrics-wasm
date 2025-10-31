@@ -19,29 +19,28 @@ Instructions for maintainers releasing `@3leaps/string-metrics-wasm` to npm.
    - Major: `make bump-major`
    - Or explicit: `make set-version VERSION=x.y.z`
 4. Update CHANGELOG / release notes (if applicable).
-5. **Stage and commit all changes**:
+5. **Run pre-commit checks** (`make precommit`):
+   - Runs format, lint, typecheck, build, test, and fixture validation
+   - Fix any errors and re-run until clean
+6. **Stage and commit all changes**:
    ```bash
    git add -A
    git commit -m "chore: release vX.Y.Z"
    ```
-   **⚠️ CRITICAL**: Pre-commit hook will run formatters. After commit completes, verify repo is
-   clean:
+   **⚠️ CRITICAL**: Pre-commit hook will run all checks including tests. After commit completes,
+   verify repo is clean:
    ```bash
    git status  # Must show "nothing to commit, working tree clean"
    ```
-   If formatters modified files (uncommitted changes shown), stage and amend:
+   If the hook modified files (uncommitted changes shown), stage and amend:
    ```bash
    git add -A
    git commit --amend --no-edit
    git status  # Verify clean again
    ```
-6. **Run full pre-push validation** (`make prepush`):
-   - Ensures version sync, license compliance, code quality, tests, and fixture validation all pass
-7. **Verify working tree is STILL clean**:
-   ```bash
-   git status  # Must show "nothing to commit, working tree clean"
-   ```
-   **⚠️ DO NOT PROCEED** if repo is not clean. This indicates a hook or build artifact issue.
+7. **Run full pre-push validation** (`make prepush`):
+   - Ensures version sync, license compliance, and runs precommit (includes all checks)
+   - Verifies working tree remains clean after all checks
 8. **CRITICAL: Verify package contents and publish readiness BEFORE tagging**:
 
    ```bash
