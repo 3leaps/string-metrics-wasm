@@ -75,26 +75,64 @@ pub fn jaro_winkler(a: &str, b: &str) -> f64 {
     rapidfuzz::distance::jaro_winkler::similarity(a.chars(), b.chars())
 }
 
-// Normalization function
-fn case_fold(s: &str) -> String {
-    s.chars()
-        .flat_map(|c| match c {
-            'İ' => vec!['i', '\u{0307}'],
-            'ß' => vec!['s', 's'],
-            _ => c.to_lowercase().collect(),
-        })
-        .collect()
+// Normalization function with optional locale support
+fn case_fold_with_locale(s: &str, locale: Option<&str>) -> String {
+    match locale {
+        // Turkish and Azerbaijani: special handling for dotted/dotless I
+        Some("tr") | Some("az") => s
+            .chars()
+            .flat_map(|c| match c {
+                'İ' => vec!['i'],      // İ (with dot) → i (lowercase with dot)
+                'I' => vec!['ı'],      // I (no dot) → ı (lowercase dotless)
+                'ß' => vec!['s', 's'], // German sharp S
+                _ => c.to_lowercase().collect(),
+            })
+            .collect(),
+
+        // Lithuanian: add combining dot above for i/j/į when followed by accents
+        // For now, we implement basic support - full Lithuanian requires accent detection
+        Some("lt") => s
+            .chars()
+            .flat_map(|c| match c {
+                'İ' => vec!['i', '\u{0307}'], // Preserve combining dot behavior
+                'ß' => vec!['s', 's'],
+                _ => c.to_lowercase().collect(),
+            })
+            .collect(),
+
+        // Default (no locale or unknown locale): Unicode casefold
+        _ => s
+            .chars()
+            .flat_map(|c| match c {
+                'İ' => vec!['i', '\u{0307}'], // İ → i + combining dot (Unicode default)
+                'ß' => vec!['s', 's'],
+                _ => c.to_lowercase().collect(),
+            })
+            .collect(),
+    }
 }
 
 // Normalization function
 #[wasm_bindgen]
 pub fn normalize(s: &str, preset: &str) -> String {
+    normalize_with_locale(s, preset, None)
+}
+
+// Normalization function with locale support
+#[wasm_bindgen]
+pub fn normalize_with_locale(s: &str, preset: &str, locale: Option<String>) -> String {
+    let locale_ref = locale.as_deref();
+
     match preset {
         "none" => s.to_string(),
         "minimal" => s.trim().chars().nfc().collect::<String>(),
-        "default" => case_fold(s).trim().chars().nfc().collect::<String>(),
+        "default" => case_fold_with_locale(s, locale_ref)
+            .trim()
+            .chars()
+            .nfc()
+            .collect::<String>(),
         "aggressive" => {
-            let folded = case_fold(s);
+            let folded = case_fold_with_locale(s, locale_ref);
             let nfkd = folded.chars().nfkd().collect::<String>();
             let without_diac = nfkd
                 .chars()

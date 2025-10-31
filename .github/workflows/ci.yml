@@ -104,7 +104,10 @@ jobs:
         run: npm test
 
       - name: Check package contents
-        run: npm pack --dry-run
+        run: |
+          npm pack --dry-run
+          npm pack --dry-run | grep -q "pkg/web/string_metrics_wasm_bg.wasm" || (echo "❌ WASM files missing from package" && exit 1)
+          echo "✅ WASM files verified in package"
 
   # Release job (only on tags)
   release:
@@ -151,14 +154,14 @@ jobs:
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          files: string-metrics-wasm-${{ steps.version.outputs.VERSION }}.tgz
+          files: 3leaps-string-metrics-wasm-${{ steps.version.outputs.VERSION }}.tgz
           fail_on_unmatched_files: false
           body: |
-            ## string-metrics-wasm ${{ github.ref_name }}
+            ## @3leaps/string-metrics-wasm ${{ github.ref_name }}
 
             ### Installation
             ```bash
-            npm install string-metrics-wasm@${{ steps.version.outputs.VERSION }}
+            npm install @3leaps/string-metrics-wasm@${{ steps.version.outputs.VERSION }}
             ```
 
             ### What's New
@@ -171,8 +174,8 @@ jobs:
             ### Verification
             ```bash
             # Install and test
-            npm install string-metrics-wasm@${{ steps.version.outputs.VERSION }}
-            node -e "const m = require('string-metrics-wasm'); console.log(m.levenshtein('hello', 'hallo'));"
+            npm install @3leaps/string-metrics-wasm@${{ steps.version.outputs.VERSION }}
+            node -e "const m = require('@3leaps/string-metrics-wasm'); console.log(m.levenshtein('hello', 'hallo'));"
             ```
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

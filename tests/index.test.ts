@@ -27,6 +27,7 @@ import {
   tokenSetRatio,
   tokenSortRatio,
   type NormalizationPreset,
+  type NormalizationLocale,
   type DistanceMetric,
   type SimilarityMetric,
   type SuggestMetric,
@@ -80,6 +81,14 @@ interface SubstringTestCase extends BaseTestCase {
 interface NormalizationTestCase extends BaseTestCase {
   input: string;
   preset: string;
+  expected: string;
+}
+
+// Normalization locale test cases
+interface NormalizationLocaleTestCase extends BaseTestCase {
+  input: string;
+  preset: string;
+  locale: string | null;
   expected: string;
 }
 
@@ -152,6 +161,7 @@ type TestCase =
   | JaroWinklerTestCase
   | SubstringTestCase
   | NormalizationTestCase
+  | NormalizationLocaleTestCase
   | RatioTestCase
   | ExtractOneTestCase
   | ExtractTestCase
@@ -274,6 +284,10 @@ for (const document of fixtureDocuments) {
           } else if (categoryGroup.category === 'normalization_presets') {
             const tc = testCase as NormalizationTestCase;
             expect(normalize(tc.input, tc.preset as NormalizationPreset)).toBe(tc.expected);
+          } else if (categoryGroup.category === 'normalization_locale') {
+            const tc = testCase as NormalizationLocaleTestCase;
+            const locale = tc.locale === null ? undefined : (tc.locale as NormalizationLocale);
+            expect(normalize(tc.input, tc.preset as NormalizationPreset, locale)).toBe(tc.expected);
           } else if (categoryGroup.category === 'suggestions') {
             const tc = testCase as SuggestionTestCase;
             const result = suggest(tc.input, tc.candidates, {

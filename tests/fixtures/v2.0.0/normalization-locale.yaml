@@ -1,0 +1,142 @@
+$schema: https://schemas.fulmenhq.dev/library/foundry/v2.0.0/similarity.schema.json
+version: 2025.10.31
+generator:
+  tool: similarity-validator
+  tool_version: 0.3.8
+  source_library: rapidfuzz-rs
+  source_version: '3.0'
+  generated_at: 2025-10-31T20:28:19.980912+00:00
+  command: similarity-validator generate --input tests/fixtures/v2.0.0/normalization-locale.yaml --overwrite
+notes: |-
+  GENERATED FILE - DO NOT EDIT EXPECTED VALUES BY HAND
+
+  This fixture was generated using similarity-validator with rapidfuzz-rs as the
+  canonical source. Values are authoritative and ready for cross-language validation.
+
+  Reference implementations:
+  - Canonical: rapidfuzz-rs 3.x (Rust, used for generation)
+  - Cross-check: rapidfuzz 3.x (Python, pyfulmen)
+  - Under test: string-metrics-wasm (TypeScript/WASM)
+
+  To regenerate:
+  similarity-validator generate --input tests/fixtures/v2.0.0/normalization-locale.yaml --overwrite
+test_cases:
+  - category: normalization_locale
+    cases:
+      - preset: default
+        input: İstanbul
+        locale: tr
+        expected: istanbul
+        description: Turkish İ (dotted capital I) → i (with locale=tr)
+        tags:
+          - turkish
+          - locale
+          - dotted-i
+      - input: IĞDIR
+        locale: tr
+        preset: default
+        expected: ığdır
+        description: Turkish I (dotless capital I) → ı (with locale=tr)
+        tags:
+          - turkish
+          - locale
+          - dotless-i
+      - preset: aggressive
+        locale: tr
+        input: İstanbul
+        expected: istanbul
+        description: Turkish İ with aggressive preset (with locale=tr)
+        tags:
+          - turkish
+          - locale
+          - aggressive
+      - locale: null
+        preset: default
+        input: İstanbul
+        expected: i̇stanbul
+        description: Turkish İ without locale → i̇ (Unicode casefold)
+        tags:
+          - turkish
+          - no-locale
+          - unicode-default
+      - locale: null
+        preset: default
+        input: IĞDIR
+        expected: iğdir
+        description: Turkish I without locale → i (Unicode casefold)
+        tags:
+          - turkish
+          - no-locale
+          - unicode-default
+      - preset: default
+        input: İlham
+        locale: az
+        expected: ilham
+        description: Azerbaijani İ → i (with locale=az)
+        tags:
+          - azerbaijani
+          - locale
+          - dotted-i
+      - input: IŞIK
+        preset: default
+        locale: az
+        expected: ışık
+        description: Azerbaijani I → ı (with locale=az)
+        tags:
+          - azerbaijani
+          - locale
+          - dotless-i
+      - preset: default
+        locale: lt
+        input: İstanbul
+        expected: i̇stanbul
+        description: Lithuanian İ → i̇ (preserves combining dot)
+        tags:
+          - lithuanian
+          - locale
+          - combining-dot
+      - locale: tr
+        input: İSTANBUL
+        preset: default
+        expected: istanbul
+        description: Turkish all caps İSTANBUL → istanbul
+        tags:
+          - turkish
+          - locale
+          - all-caps
+      - locale: tr
+        preset: default
+        input: istanbul
+        expected: istanbul
+        description: Turkish already lowercase (no-op)
+        tags:
+          - turkish
+          - locale
+          - no-op
+      - locale: tr
+        preset: default
+        input: '  İstanbul  '
+        expected: istanbul
+        description: Turkish İ with whitespace trimming
+        tags:
+          - turkish
+          - locale
+          - trim
+      - preset: default
+        input: İSTANBUL IĞDIR
+        locale: tr
+        expected: istanbul ığdır
+        description: Turkish multiple words with İ and I
+        tags:
+          - turkish
+          - locale
+          - multi-word
+      - input: Café
+        locale: null
+        preset: default
+        expected: café
+        description: Standard casefold with explicit locale=null
+        tags:
+          - standard
+          - no-locale
+          - unicode-default

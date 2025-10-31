@@ -240,6 +240,7 @@ fn validate_test_case(file: &str, category: &str, test: &TestCase) -> Validation
         "ratio" => validate_ratio(file, category, test),
         "substring" => validate_substring(file, category, test),
         "normalization_presets" => validate_normalization(file, category, test),
+        "normalization_locale" => validate_normalization_locale(file, category, test),
         "suggestions" => validate_suggestions(file, category, test),
         "unified_distance" => validate_unified_distance(file, category, test),
         "unified_score" => validate_unified_score(file, category, test),
@@ -649,6 +650,40 @@ fn validate_normalization(file: &str, category: &str, test: &TestCase) -> Valida
     }
 }
 
+fn validate_normalization_locale(file: &str, category: &str, test: &TestCase) -> ValidationResult {
+    let input = get_string_input(&test.inputs, "input").unwrap_or_default();
+    let preset = get_string_input(&test.inputs, "preset").unwrap_or_default();
+    let locale = test
+        .inputs
+        .get("locale")
+        .and_then(|v| v.as_str())
+        .map(|s| s.to_string());
+
+    let actual_normalized = normalize_with_locale(&input, &preset, locale.as_deref());
+
+    let expected_normalized = test
+        .expected
+        .as_ref()
+        .and_then(|v| v.as_str())
+        .unwrap_or("");
+
+    let matches = actual_normalized == expected_normalized;
+
+    ValidationResult {
+        file: file.to_string(),
+        category: category.to_string(),
+        description: test.description.clone(),
+        passed: matches,
+        expected: Some(format!("\"{}\"", expected_normalized)),
+        actual: Some(format!("\"{}\"", actual_normalized)),
+        error: if matches {
+            None
+        } else {
+            Some(format!("Normalization mismatch (locale={:?})", locale))
+        },
+    }
+}
+
 fn validate_suggestions(file: &str, category: &str, test: &TestCase) -> ValidationResult {
     // Extract inputs
     let input = get_string_input(&test.inputs, "input").unwrap_or_default();
@@ -960,6 +995,7 @@ fn generate_test_case(category: &str, case: &mut TestCase, overwrite: bool) -> b
         "ratio" => generate_ratio(case, overwrite),
         "substring" => generate_substring(case, overwrite),
         "normalization_presets" => generate_normalization(case, overwrite),
+        "normalization_locale" => generate_normalization_locale(case, overwrite),
         "suggestions" => generate_suggestions(case, overwrite),
         "unified_distance" => generate_unified_distance(case, overwrite),
         "unified_score" => generate_unified_score(case, overwrite),
@@ -1187,6 +1223,25 @@ fn generate_normalization(case: &mut TestCase, overwrite: bool) -> bool {
     let preset = get_string_input(&case.inputs, "preset").unwrap_or_default();
 
     let normalized = normalize(&input, &preset);
+
+    case.expected = Some(serde_yaml::Value::String(normalized));
+    true
+}
+
+fn generate_normalization_locale(case: &mut TestCase, overwrite: bool) -> bool {
+    if !overwrite && case.expected.is_some() {
+        return false;
+    }
+
+    let input = get_string_input(&case.inputs, "input").unwrap_or_default();
+    let preset = get_string_input(&case.inputs, "preset").unwrap_or_default();
+    let locale = case
+        .inputs
+        .get("locale")
+        .and_then(|v| v.as_str())
+        .map(|s| s.to_string());
+
+    let normalized = normalize_with_locale(&input, &preset, locale.as_deref());
 
     case.expected = Some(serde_yaml::Value::String(normalized));
     true
@@ -1427,24 +1482,56 @@ fn compute_score_for_metric(input: &str, candidate: &str, metric: &str) -> (f64,
 // ============================================================================
 // These functions match the canonical implementation in src/lib.rs
 
-/// Case folding with special handling for Turkish İ and German ß
-fn case_fold(s: &str) -> String {
-    s.chars()
-        .flat_map(|c| match c {
-            'İ' => vec!['i', '\u{0307}'], // Turkish dotted capital I
-            'ß' => vec!['s', 's'],        // German sharp S
-            _ => c.to_lowercase().collect(),
-        })
-        .collect()
+/// Case folding with optional locale support
+fn case_fold_with_locale(s: &str, locale: Option<&str>) -> String {
+    match locale {
+        // Turkish and Azerbaijani: special handling for dotted/dotless I
+        Some("tr") | Some("az") => s
+            .chars()
+            .flat_map(|c| match c {
+                'İ' => vec!['i'],      // İ (with dot) → i (lowercase with dot)
+                'I' => vec!['ı'],      // I (no dot) → ı (lowercase dotless)
+                'ß' => vec!['s', 's'], // German sharp S
+                _ => c.to_lowercase().collect(),
+            })
+            .collect(),
+
+        // Lithuanian: add combining dot above for i/j/į when followed by accents
+        Some("lt") => s
+            .chars()
+            .flat_map(|c| match c {
+                'İ' => vec!['i', '\u{0307}'], // Preserve combining dot behavior
+                'ß' => vec!['s', 's'],
+                _ => c.to_lowercase().collect(),
+            })
+            .collect(),
+
+        // Default (no locale or unknown locale): Unicode casefold
+        _ => s
+            .chars()
+            .flat_map(|c| match c {
+                'İ' => vec!['i', '\u{0307}'], // İ → i + combining dot (Unicode default)
+                'ß' => vec!['s', 's'],
+                _ => c.to_lowercase().collect(),
+            })
+            .collect(),
+    }
 }
 
 fn normalize(input: &str, preset: &str) -> String {
+    normalize_with_locale(input, preset, None)
+}
+
+fn normalize_with_locale(input: &str, preset: &str, locale: Option<&str>) -> String {
     match preset {
         "none" => input.to_string(),
         "minimal" => input.trim().nfc().collect::<String>(),
-        "default" => case_fold(input).trim().nfc().collect::<String>(),
+        "default" => case_fold_with_locale(input, locale)
+            .trim()
+            .nfc()
+            .collect::<String>(),
         "aggressive" => {
-            let folded = case_fold(input);
+            let folded = case_fold_with_locale(input, locale);
             let nfkd: String = folded.nfkd().collect();
             let without_diac: String = nfkd
                 .chars()

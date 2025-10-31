@@ -269,15 +269,28 @@ score('hello', 'world', 'levenshtein'); // 0.5714 (edit distance-based)
 
 ### Normalization & Suggestions
 
-#### `normalize(input: string, preset?: NormalizationPreset): string`
+#### `normalize(input: string, preset?: NormalizationPreset, locale?: NormalizationLocale): string`
 
-Normalize text for comparison.
+Normalize text for comparison with optional locale-specific case folding.
 
 **Presets:** `'none'`, `'minimal'`, `'default'`, `'aggressive'`
 
+**Locales:** `'tr'` (Turkish), `'az'` (Azerbaijani), `'lt'` (Lithuanian), or `undefined` (default
+Unicode casefold)
+
 ```typescript
-normalize('Naïve Café', 'default'); // 'naive cafe'
+normalize('Naïve Café', 'default'); // 'naïve café'
+
+// Turkish/Azerbaijani: dotted/dotless I handling
+normalize('İstanbul', 'default', 'tr'); // 'istanbul' (İ→i)
+normalize('IĞDIR', 'default', 'tr'); // 'ığdır' (I→ı dotless)
+
+// Default Unicode casefold (no locale)
+normalize('İstanbul', 'default'); // 'i̇stanbul' (İ→i + combining dot)
 ```
+
+**Note:** Most applications don't need locale-specific normalization. Only use when processing
+Turkish, Azerbaijani, or Lithuanian text where dotted/dotless I distinction matters.
 
 #### `suggest(query: string, candidates: string[], options?): Suggestion[]`
 
@@ -413,8 +426,9 @@ Run tests with `npm test` or `make test`.
 This project follows [Semantic Versioning](https://semver.org/). Version history is maintained in
 [CHANGELOG.md](CHANGELOG.md).
 
-**Current Status**: v0.3.4 - RapidFuzz-aligned API with TypeScript extensions and compatibility
-aliases.
+**Current Status**: See
+[latest release](https://github.com/3leaps/string-metrics-wasm/releases/latest) for the current
+version and changes.
 
 ## License
 

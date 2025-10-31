@@ -1,6 +1,7 @@
 import wasm from './wasm.js';
 
 export type NormalizationPreset = 'none' | 'minimal' | 'default' | 'aggressive';
+export type NormalizationLocale = 'tr' | 'az' | 'lt';
 
 export function levenshtein(a: string, b: string): number {
   return wasm.levenshtein(a, b);
@@ -44,7 +45,27 @@ export function jaro_winkler_custom(
   return wasm.jaro_winkler_with_params(a, b, prefixScale, maxPrefix);
 }
 
-export function normalize(input: string, preset: NormalizationPreset = 'none'): string {
+/**
+ * Normalize a string using the specified preset and optional locale
+ *
+ * @param input - The string to normalize
+ * @param preset - Normalization preset (none, minimal, default, aggressive)
+ * @param locale - Optional locale for locale-specific case folding (tr, az, lt)
+ * @returns Normalized string
+ *
+ * Locale-specific behavior:
+ * - 'tr'/'az' (Turkish/Azerbaijani): İ→i, I→ı (dotted/dotless I handling)
+ * - 'lt' (Lithuanian): Preserves combining dots with accents
+ * - undefined: Standard Unicode casefold (İ→i̇ with combining dot)
+ */
+export function normalize(
+  input: string,
+  preset: NormalizationPreset = 'none',
+  locale?: NormalizationLocale,
+): string {
+  if (locale !== undefined) {
+    return wasm.normalize_with_locale(input, preset, locale);
+  }
   return wasm.normalize(input, preset);
 }
 

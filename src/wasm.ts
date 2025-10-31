@@ -9,6 +9,7 @@ type WasmBindings = {
   jaro_winkler(a: string, b: string): number;
   jaro_winkler_with_params(a: string, b: string, prefix_scale: number, max_prefix: number): number;
   normalize(input: string, preset: string): string;
+  normalize_with_locale(input: string, preset: string, locale: string | undefined): string;
   // RapidFuzz fuzz module
   ratio(a: string, b: string): number;
   // RapidFuzz distance - Indel

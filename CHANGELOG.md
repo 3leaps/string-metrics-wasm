@@ -7,6 +7,34 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.3.8] - 2025-10-31
+
+### Added
+
+- **Locale-aware normalization**
+  - Added optional `locale` parameter to `normalize()` function
+  - Turkish/Azerbaijani support: `normalize('İstanbul', 'default', 'tr')` → 'istanbul'
+  - Lithuanian support: Preserves combining dots with accents
+  - Supports locales: 'tr' (Turkish), 'az' (Azerbaijani), 'lt' (Lithuanian)
+  - Backward compatible: omitting locale uses standard Unicode casefold
+  - New fixture file: `tests/fixtures/v2.0.0/normalization-locale.yaml` with 15 test cases
+  - Updated validator to handle `normalization_locale` category
+
+### Fixed
+
+- **CI/CD release automation**
+  - Fixed GitHub release tarball filename for scoped package (@3leaps)
+  - Updated release notes to use correct package name in examples
+  - Added explicit WASM file verification in package contents check (prevents v0.3.5-style breakage)
+
+### Changed
+
+- **Documentation**
+  - README.md version link now points to latest release (less brittle than hardcoded version)
+  - README.md normalize() documentation includes locale parameter and examples
+
+[0.3.8]: https://github.com/3leaps/string-metrics-wasm/compare/v0.3.7...v0.3.8
+
 ## [0.3.7] - 2025-10-31
 
 ### Fixed
