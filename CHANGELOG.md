@@ -7,6 +7,23 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.3.7] - 2025-10-31
+
+### Fixed
+
+- **Release process verification**
+  - Updated publishing.md with explicit clean working tree verification steps
+  - Added pre-commit hook formatting verification workflow
+  - Added CI/CD wait step before npm publish
+
+### Changed
+
+- **Documentation**
+  - Comprehensive release checklist with git status verification at each critical step
+  - Explicit handling of pre-commit hook formatter modifications
+
+[0.3.7]: https://github.com/3leaps/string-metrics-wasm/compare/v0.3.6...v0.3.7
+
 ## [0.3.6] - 2025-10-31
 
 ### Fixed

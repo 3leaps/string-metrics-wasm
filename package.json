@@ -1,6 +1,6 @@
 {
   "name": "@3leaps/string-metrics-wasm",
-  "version": "0.3.6",
+  "version": "0.3.7",
   "description": "High-performance string similarity metrics via WASM bindings to rapidfuzz-rs",
   "type": "module",
   "main": "./dist/index.js",

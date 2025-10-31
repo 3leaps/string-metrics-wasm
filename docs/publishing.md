@@ -11,16 +11,39 @@ Instructions for maintainers releasing `@3leaps/string-metrics-wasm` to npm.
 
 ## Release Checklist
 
-1. Confirm `Cargo.toml` and `package.json` share the target version (`make version-check`).
-2. Bump the version with the Makefile helper:
+1. **Ensure clean working tree**: `git status` should show no uncommitted changes
+2. Confirm `Cargo.toml` and `package.json` share the target version (`make version-check`).
+3. Bump the version with the Makefile helper:
    - Patch: `make bump-patch`
    - Minor: `make bump-minor`
    - Major: `make bump-major`
    - Or explicit: `make set-version VERSION=x.y.z`
-3. Update CHANGELOG / release notes (if applicable).
-4. **Run full pre-push validation** (`make prepush`):
+4. Update CHANGELOG / release notes (if applicable).
+5. **Stage and commit all changes**:
+   ```bash
+   git add -A
+   git commit -m "chore: release vX.Y.Z"
+   ```
+   **⚠️ CRITICAL**: Pre-commit hook will run formatters. After commit completes, verify repo is
+   clean:
+   ```bash
+   git status  # Must show "nothing to commit, working tree clean"
+   ```
+   If formatters modified files (uncommitted changes shown), stage and amend:
+   ```bash
+   git add -A
+   git commit --amend --no-edit
+   git status  # Verify clean again
+   ```
+6. **Run full pre-push validation** (`make prepush`):
    - Ensures version sync, license compliance, code quality, tests, and fixture validation all pass
-5. **CRITICAL: Verify package contents and publish readiness BEFORE tagging**:
+7. **Verify working tree is STILL clean**:
+   ```bash
+   git status  # Must show "nothing to commit, working tree clean"
+   ```
+   **⚠️ DO NOT PROCEED** if repo is not clean. This indicates a hook or build artifact issue.
+8. **CRITICAL: Verify package contents and publish readiness BEFORE tagging**:
+
    ```bash
    # Verify WASM files are included
    npm pack --dry-run | grep pkg/web
@@ -28,29 +51,28 @@ Instructions for maintainers releasing `@3leaps/string-metrics-wasm` to npm.
    # Verify prepublishOnly hook passes (runs make quality && make build)
    npm publish --dry-run
    ```
-   **⚠️ DO THIS BEFORE STEP 6**: If either command fails, fix issues and commit. Only proceed to
-   tagging after verification succeeds.
-6. **Tag the release locally** (don't push yet):
+
+9. **Tag the release locally** (don't push yet):
    ```bash
    git tag -a vX.Y.Z -m "Release vX.Y.Z - brief description"
    ```
-7. **Final verification**: Run `npm publish --dry-run` one more time to ensure tag doesn't break
-   anything.
-8. **Push tag to remote**:
-   ```bash
-   git push origin vX.Y.Z
-   ```
-9. **Publish with public access** (required for scoped packages):
-   ```bash
-   npm publish --access public
-   ```
-   **⚠️ IMPORTANT**: The `--access public` flag is **required** for scoped packages (@3leaps/...).
-   Without it, npm defaults to private access, which requires a paid organization plan.
-10. **Post-publish verification** - Smoke-test the published version:
+10. **Push commit and tag to remote**:
+    ```bash
+    git push origin main
+    git push origin vX.Y.Z
+    ```
+11. **Wait for CI/CD to pass**: Check GitHub Actions - all checks must be green before publishing
+12. **Publish with public access** (required for scoped packages):
+    ```bash
+    npm publish --access public
+    ```
+    **⚠️ IMPORTANT**: The `--access public` flag is **required** for scoped packages (@3leaps/...).
+    Without it, npm defaults to private access, which requires a paid organization plan.
+13. **Post-publish verification** - Smoke-test the published version:
     ```bash
     npm install @3leaps/string-metrics-wasm@X.Y.Z
     ```
-11. Create GitHub release from tag with release notes.
+14. Create GitHub release from tag with release notes.
 
 ## What `npm publish` Does
 
@@ -69,8 +91,8 @@ This ensures:
 - Rust formatting/lints succeed (`cargo fmt --check`, `cargo clippy -- -D warnings`)
 - WASM and TypeScript bundles are regenerated (`pkg/web/*`, `dist/*`)
 
-If any command fails, the publish is aborted. This gate prevents broken releases like v0.3.5 (missing
-WASM files) from reaching npm.
+If any command fails, the publish is aborted. This gate prevents broken releases like v0.3.5
+(missing WASM files) from reaching npm.
 
 ## Published Artifacts
 

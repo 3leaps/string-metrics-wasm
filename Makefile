@@ -197,12 +197,25 @@ precommit:
 
 prepush:
 	@echo "🚀 Running pre-push validation..."
+	@if [ -n "$$(git status --porcelain)" ]; then \
+		echo "❌ Working tree is not clean. Commit or stash changes before pushing."; \
+		echo ""; \
+		git status --short; \
+		exit 1; \
+	fi
+	@echo "✅ Working tree is clean"
 	@$(MAKE) version-check
 	@npm run license:check || { echo "❌ License check failed"; exit 1; }
 	@$(MAKE) quality
 	@$(MAKE) build
 	@$(MAKE) test
 	@$(MAKE) validate-fixtures
+	@if [ -n "$$(git status --porcelain)" ]; then \
+		echo "❌ Working tree was modified during validation. This indicates a build artifact or hook issue."; \
+		echo ""; \
+		git status --short; \
+		exit 1; \
+	fi
 	@echo "✅ All pre-push checks passed!"
 
 # Fixture validation targets
