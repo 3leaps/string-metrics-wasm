@@ -7,9 +7,77 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
-## [0.3.1] - TBD
+## [0.3.4] - 2025-10-31
 
 ### Added
+
+- **Test coverage infrastructure**
+  - Integrated `@vitest/coverage-v8` for comprehensive coverage tracking
+  - `vitest.config.ts` with enforced coverage thresholds (90/90/90/70)
+  - `make test-coverage` target for detailed coverage reports
+  - `npm run test:coverage` script
+  - Current coverage: 92%+ statements/lines/functions, 71% branches (exceeds all targets)
+- **AI Developer Guide (AGENTS.md)**
+  - Comprehensive guide for AI-assisted development
+  - Mandatory reading list and session startup protocol
+  - Detailed DO/DO-NOT operational guidelines
+  - Test requirements and quality standards documentation
+  - Git operation safety protocols and push authorization requirements
+  - Makefile rationale and API naming conventions
+  - Pre-commit checklist and commit attribution guidelines
+- **Fixture validator enhancements** (Phase 1 completion)
+  - Added support for `indel`, `lcs_seq`, `ratio` categories
+  - Added support for `unified_distance` and `unified_score` categories
+  - All 114 fixture tests now passing and validated against rapidfuzz-rs
+  - TypeScript-only categories (token metrics, process helpers) appropriately skipped
+  - Re-enabled fixture validation in pre-push hook
+- **Enhanced documentation**
+  - `docs/README.md` - Documentation hub with navigation guide
+  - `docs/development.md` - Added comprehensive "Fixture Validation & Canonical Source of Truth"
+    section
+  - Thin shim architecture documentation with ASCII diagrams
+  - Clear explanation of validator as canonical value generator
+  - Table showing what gets tested where (Rust vs TypeScript)
+  - `similarity-validator/README.md` - Enhanced with testing philosophy and architecture explanation
+
+### Changed
+
+- **BREAKING: camelCase API convention** with backward compatibility
+  - All option fields now use camelCase: `scoreCutoff`, `minScore`, `maxSuggestions`,
+    `normalizePreset`, etc.
+  - All metric identifiers use camelCase: `jaroWinkler`, `damerauLevenshtein`, `partialRatio`, etc.
+  - All result fields use camelCase: `normalizedValue`, `matchedRange`, etc.
+  - **Backward Compatibility**: snake_case variants accepted as aliases (auto-converted internally)
+  - See README.md for full API reference with new naming
+- **Line ending normalization**
+  - Enforced LF line endings across all platforms via `.gitattributes`
+  - Applied rustfmt to validator code for consistency
+
+### Fixed
+
+- **TypeScript type errors in test suite**
+  - Added comprehensive interfaces for all fixture test case types
+  - Added proper type assertions for YAML fixture data
+  - Fixed metric name and normalization preset type conversions
+  - All 119 tests pass with zero TypeScript errors
+
+### Developer Experience
+
+- **make test-coverage** - New target for coverage reports with threshold enforcement
+- **Fixture validation** - Now runs in pre-push hook (all 114 tests passing)
+- **Documentation** - Clear thin shim pattern explanation for maintainers and AI developers
+- **Version sync** - Cargo.toml and package.json remain synchronized
+
+### Technical Details
+
+- **Coverage**: 92.28% statements/lines, 97.14% functions, 71.42% branches
+- **Tests**: 119 TypeScript unit tests + 114 fixture validator tests = 233 total tests
+- **Bundle size**: No change from v0.3.0 (226 KB, 30 KB packaged)
+- **Validator**: 1,462 lines of Rust (thin shim to rapidfuzz-rs)
+
+[0.3.4]: https://github.com/3leaps/string-metrics-wasm/compare/v0.3.0...v0.3.4
+
+## [0.3.1] - TBD
 
 - **License compliance checking**
   - `scripts/check-licenses.js` - Automated license scanner for production dependencies

@@ -227,8 +227,31 @@ export interface ExtractOptions {
   scorer?: ScorerFunction;
   processor?: (str: string) => string;
   scoreCutoff?: number;
+  score_cutoff?: number;
   limit?: number;
 }
+
+type NormalizedExtractOptions = {
+  scorer: ScorerFunction;
+  processor: (str: string) => string;
+  scoreCutoff: number;
+  limit?: number;
+};
+
+const defaultProcessor = (value: string): string => value;
+
+const normalizeExtractOptions = (options: ExtractOptions = {}): NormalizedExtractOptions => {
+  const scorer = options.scorer ?? ratio;
+  const processor = options.processor ?? defaultProcessor;
+  const scoreCutoff = options.scoreCutoff ?? options.score_cutoff ?? 0;
+
+  return {
+    scorer,
+    processor,
+    scoreCutoff,
+    limit: options.limit,
+  };
+};
 
 export interface ExtractResult {
   choice: string;
@@ -245,7 +268,7 @@ export function extractOne(
   choices: string[],
   options: ExtractOptions = {},
 ): ExtractResult | null {
-  const { scorer = ratio, processor = (s) => s, scoreCutoff = 0 } = options;
+  const { scorer, processor, scoreCutoff } = normalizeExtractOptions(options);
 
   if (choices.length === 0) {
     return null;
@@ -282,7 +305,7 @@ export function extract(
   choices: string[],
   options: ExtractOptions = {},
 ): ExtractResult[] {
-  const { scorer = ratio, processor = (s) => s, scoreCutoff = 0, limit } = options;
+  const { scorer, processor, scoreCutoff, limit } = normalizeExtractOptions(options);
 
   if (choices.length === 0) {
     return [];
@@ -316,9 +339,18 @@ export function extract(
 // Unified API - Metric-selectable distance and scoring
 // ============================================================================
 
-export type DistanceMetric = 'levenshtein' | 'damerauLevenshtein' | 'osa' | 'indel' | 'lcsSeq';
+type DistanceMetricCamel = 'levenshtein' | 'damerauLevenshtein' | 'osa' | 'indel' | 'lcsSeq';
+type DistanceMetricSnake =
+  | 'levenshtein'
+  | 'damerau_levenshtein'
+  | 'damerau_unrestricted'
+  | 'damerau_osa'
+  | 'osa'
+  | 'indel'
+  | 'lcs_seq';
+export type DistanceMetric = DistanceMetricCamel | DistanceMetricSnake;
 
-export type SimilarityMetric =
+type SimilarityMetricCamel =
   | 'levenshtein'
   | 'damerauLevenshtein'
   | 'osa'
@@ -331,6 +363,78 @@ export type SimilarityMetric =
   | 'tokenSortRatio'
   | 'tokenSetRatio';
 
+type SimilarityMetricSnake =
+  | 'levenshtein'
+  | 'damerau_levenshtein'
+  | 'damerau_unrestricted'
+  | 'damerau_osa'
+  | 'osa'
+  | 'jaro'
+  | 'jaro_winkler'
+  | 'indel'
+  | 'lcs_seq'
+  | 'ratio'
+  | 'partial_ratio'
+  | 'token_sort_ratio'
+  | 'token_set_ratio';
+export type SimilarityMetric = SimilarityMetricCamel | SimilarityMetricSnake;
+
+const normalizeDistanceMetric = (metric: DistanceMetric = 'levenshtein'): DistanceMetricCamel => {
+  switch (metric) {
+    case 'damerauLevenshtein':
+    case 'damerau_levenshtein':
+    case 'damerau_unrestricted':
+      return 'damerauLevenshtein';
+    case 'damerau_osa':
+      return 'osa';
+    case 'lcsSeq':
+    case 'lcs_seq':
+      return 'lcsSeq';
+    case 'levenshtein':
+    case 'osa':
+    case 'indel':
+      return metric;
+    default:
+      throw new Error(`Unknown distance metric: ${metric as string}`);
+  }
+};
+
+const normalizeSimilarityMetric = (
+  metric: SimilarityMetric = 'jaroWinkler',
+): SimilarityMetricCamel => {
+  switch (metric) {
+    case 'damerauLevenshtein':
+    case 'damerau_levenshtein':
+    case 'damerau_unrestricted':
+      return 'damerauLevenshtein';
+    case 'jaroWinkler':
+    case 'jaro_winkler':
+      return 'jaroWinkler';
+    case 'lcsSeq':
+    case 'lcs_seq':
+      return 'lcsSeq';
+    case 'damerau_osa':
+      return 'osa';
+    case 'partialRatio':
+    case 'partial_ratio':
+      return 'partialRatio';
+    case 'tokenSortRatio':
+    case 'token_sort_ratio':
+      return 'tokenSortRatio';
+    case 'tokenSetRatio':
+    case 'token_set_ratio':
+      return 'tokenSetRatio';
+    case 'levenshtein':
+    case 'osa':
+    case 'jaro':
+    case 'indel':
+    case 'ratio':
+      return metric as SimilarityMetricCamel;
+    default:
+      throw new Error(`Unknown similarity metric: ${metric as string}`);
+  }
+};
+
 /**
  * Calculate edit distance between two strings using the specified metric
  * Returns the raw distance (number of edits required)
@@ -341,7 +445,9 @@ export type SimilarityMetric =
  * @returns Edit distance (raw number)
  */
 export function distance(a: string, b: string, metric: DistanceMetric = 'levenshtein'): number {
-  switch (metric) {
+  const normalizedMetric = normalizeDistanceMetric(metric);
+
+  switch (normalizedMetric) {
     case 'levenshtein':
       return levenshtein(a, b);
     case 'damerauLevenshtein':
@@ -353,7 +459,7 @@ export function distance(a: string, b: string, metric: DistanceMetric = 'levensh
     case 'lcsSeq':
       return lcs_seq_distance(a, b);
     default:
-      throw new Error(`Unknown distance metric: ${metric}`);
+      throw new Error(`Unknown distance metric: ${normalizedMetric as string}`);
   }
 }
 
@@ -367,7 +473,9 @@ export function distance(a: string, b: string, metric: DistanceMetric = 'levensh
  * @returns Similarity score (0.0-1.0)
  */
 export function score(a: string, b: string, metric: SimilarityMetric = 'jaroWinkler'): number {
-  switch (metric) {
+  const normalizedMetric = normalizeSimilarityMetric(metric);
+
+  switch (normalizedMetric) {
     case 'levenshtein':
       return normalized_levenshtein(a, b);
     case 'damerauLevenshtein':
@@ -391,7 +499,7 @@ export function score(a: string, b: string, metric: SimilarityMetric = 'jaroWink
     case 'tokenSetRatio':
       return tokenSetRatio(a, b) / 100; // Convert 0-100 to 0-1
     default:
-      throw new Error(`Unknown similarity metric: ${metric}`);
+      throw new Error(`Unknown similarity metric: ${normalizedMetric as string}`);
   }
 }
 
@@ -441,7 +549,7 @@ export function substringSimilarity(query: string, candidate: string): Substring
   };
 }
 
-export type SuggestMetric =
+type SuggestMetricCamel =
   | 'levenshtein'
   | 'damerauOsa'
   | 'damerauUnrestricted'
@@ -455,16 +563,107 @@ export type SuggestMetric =
   | 'indel'
   | 'lcsSeq';
 
+type SuggestMetricSnake =
+  | 'levenshtein'
+  | 'damerau_osa'
+  | 'damerau_unrestricted'
+  | 'jaro'
+  | 'jaro_winkler'
+  | 'substring'
+  | 'ratio'
+  | 'partial_ratio'
+  | 'token_sort_ratio'
+  | 'token_set_ratio'
+  | 'indel'
+  | 'lcs_seq';
+
+export type SuggestMetric = SuggestMetricCamel | SuggestMetricSnake;
+
+const normalizeSuggestMetric = (metric: SuggestMetric = 'jaroWinkler'): SuggestMetricCamel => {
+  switch (metric) {
+    case 'damerauOsa':
+    case 'damerau_osa':
+      return 'damerauOsa';
+    case 'damerauUnrestricted':
+    case 'damerau_unrestricted':
+      return 'damerauUnrestricted';
+    case 'jaroWinkler':
+    case 'jaro_winkler':
+      return 'jaroWinkler';
+    case 'partialRatio':
+    case 'partial_ratio':
+      return 'partialRatio';
+    case 'tokenSortRatio':
+    case 'token_sort_ratio':
+      return 'tokenSortRatio';
+    case 'tokenSetRatio':
+    case 'token_set_ratio':
+      return 'tokenSetRatio';
+    case 'lcsSeq':
+    case 'lcs_seq':
+      return 'lcsSeq';
+    case 'levenshtein':
+    case 'jaro':
+    case 'substring':
+    case 'ratio':
+    case 'indel':
+      return metric as SuggestMetricCamel;
+    default:
+      throw new Error(`Unknown suggestion metric: ${metric as string}`);
+  }
+};
+
 export interface SuggestionOptions {
   metric?: SuggestMetric;
   preset?: NormalizationPreset;
   normalizePreset?: NormalizationPreset;
+  normalize_preset?: NormalizationPreset;
   minScore?: number;
+  min_score?: number;
   maxSuggestions?: number;
+  max_suggestions?: number;
   preferPrefix?: boolean;
+  prefer_prefix?: boolean;
   jaroPrefixScale?: number;
+  jaro_prefix_scale?: number;
   jaroMaxPrefix?: number;
+  jaro_max_prefix?: number;
 }
+
+type NormalizedSuggestionOptions = {
+  metric: SuggestMetricCamel;
+  preset?: NormalizationPreset;
+  normalizePreset?: NormalizationPreset;
+  minScore: number;
+  maxSuggestions: number;
+  preferPrefix: boolean;
+  jaroPrefixScale: number;
+  jaroMaxPrefix: number;
+};
+
+const normalizeSuggestionOptions = (
+  options: SuggestionOptions = {},
+): NormalizedSuggestionOptions => {
+  const metric = normalizeSuggestMetric(options.metric ?? 'jaroWinkler');
+  const preset = options.preset;
+  const normalizePresetOption = options.normalizePreset ?? options.normalize_preset;
+  const minScore = options.minScore ?? options.min_score ?? 0.6;
+  const maxSuggestions = options.maxSuggestions ?? options.max_suggestions ?? 5;
+  const preferPrefix = options.preferPrefix ?? options.prefer_prefix ?? false;
+  const jaroPrefixScale = options.jaroPrefixScale ?? options.jaro_prefix_scale ?? 0.1;
+  const jaroMaxPrefix = options.jaroMaxPrefix ?? options.jaro_max_prefix ?? 4;
+
+  return {
+    metric,
+    preset,
+    normalizePreset: normalizePresetOption,
+    minScore,
+    maxSuggestions,
+    preferPrefix,
+    jaroPrefixScale,
+    jaroMaxPrefix,
+  };
+};
 
 export interface Suggestion {
   value: string;
@@ -475,7 +674,7 @@ export interface Suggestion {
 }
 
 const computeSimilarity = (
-  metric: SuggestMetric,
+  metric: SuggestMetricCamel,
   query: string,
   candidate: string,
   jaroOptions: { prefixScale: number; maxPrefix: number },
@@ -554,15 +753,15 @@ export function suggest(
   options: SuggestionOptions = {},
 ): Suggestion[] {
   const {
-    metric = 'jaroWinkler',
+    metric,
     preset: presetOption,
     normalizePreset: normalizePresetOption,
-    minScore = 0.6,
-    maxSuggestions = 5,
-    preferPrefix = false,
-    jaroPrefixScale = 0.1,
-    jaroMaxPrefix = 4,
-  } = options;
+    minScore,
+    maxSuggestions,
+    preferPrefix,
+    jaroPrefixScale,
+    jaroMaxPrefix,
+  } = normalizeSuggestionOptions(options);
 
   const preset = presetOption ?? normalizePresetOption ?? 'default';
 

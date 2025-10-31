@@ -1,4 +1,4 @@
-.PHONY: help bootstrap build test clean version-check version-sync bump-patch bump-minor bump-major set-version
+.PHONY: help bootstrap build test test-coverage clean version-check version-sync bump-patch bump-minor bump-major set-version
 .PHONY: quality format format-check lint lint-fix typecheck rust-fmt rust-clippy
 .PHONY: precommit prepush
 .PHONY: build-validator validate-fixtures
@@ -11,6 +11,7 @@ help:
 	@echo "  make bootstrap      - Install npm deps and ensure wasm-pack is available"
 	@echo "  make build          - Build WASM and TypeScript"
 	@echo "  make test           - Run tests"
+	@echo "  make test-coverage  - Run tests with coverage report"
 	@echo "  make clean          - Remove build artifacts"
 	@echo ""
 	@echo "Code quality:"
@@ -121,6 +122,9 @@ build: version-check
 
 test: build
 	@npm test
+
+test-coverage: build
+	@npm run test:coverage
 
 clean:
 	@echo "Cleaning build artifacts..."

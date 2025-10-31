@@ -1,5 +1,8 @@
 # string-metrics-wasm
 
+[![npm version](https://img.shields.io/npm/v/string-metrics-wasm.svg)](https://www.npmjs.com/package/string-metrics-wasm)
+[![license: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+
 High-performance string similarity and fuzzy matching via WASM bindings to
 [rapidfuzz-rs](https://github.com/rapidfuzz/rapidfuzz-rs).
 
@@ -65,6 +68,10 @@ console.log(similarity); // 0.4666...
 ```
 
 ## API Documentation
+
+> Compatibility: All examples use camelCase option names and metric identifiers. For ecosystems that
+> standardize on snake_case (e.g., Fulmen/Crucible fixtures), the same snake_case names are accepted
+> as aliases and normalized internally.
 
 ### Distance Metrics (WASM)
 
@@ -255,6 +262,9 @@ Calculate similarity using any metric (returns 0-1 normalized score).
 ```typescript
 score('hello', 'world'); // 0.4666... (default: jaroWinkler)
 score('new york mets', 'mets york new', 'tokenSortRatio'); // 1.0
+
+// Fulmen/Crucible users: override default metric if needed
+score('hello', 'world', 'levenshtein'); // 0.5714 (edit distance-based)
 ```
 
 ### Normalization & Suggestions
@@ -347,7 +357,9 @@ make bump-major     # Bump major version (0.1.0 -> 1.0.0)
 make set-version VERSION=x.y.z  # Set explicit version
 ```
 
-Additional notes for contributors live in [`docs/development.md`](docs/development.md).
+Explore the rest of the documentation under [`docs/`](docs/). Start with the high-level
+[overview](docs/README.md) or jump straight to the contributor guide in
+[`docs/development.md`](docs/development.md).
 
 ### Code Quality Tools
 
@@ -383,7 +395,7 @@ Run `node benchmark-phase1b.js` for detailed benchmarks.
 
 This project includes comprehensive test coverage:
 
-- **115 unit tests** covering all functions
+- **119 unit tests** covering all functions
 - **80 YAML fixture test cases** for reproducibility
 - **100% regression-free** across all releases
 
@@ -401,7 +413,8 @@ Run tests with `npm test` or `make test`.
 This project follows [Semantic Versioning](https://semver.org/). Version history is maintained in
 [CHANGELOG.md](CHANGELOG.md).
 
-**Current Status**: v0.3.0 - Active development with expanded RapidFuzz surface area.
+**Current Status**: v0.3.4 - RapidFuzz-aligned API with TypeScript extensions and compatibility
+aliases.
 
 ## License
 
