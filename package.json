@@ -1,6 +1,6 @@
 {
   "name": "@3leaps/string-metrics-wasm",
-  "version": "0.3.5",
+  "version": "0.3.6",
   "description": "High-performance string similarity metrics via WASM bindings to rapidfuzz-rs",
   "type": "module",
   "main": "./dist/index.js",
@@ -8,7 +8,7 @@
   "files": [
     "dist",
     "!dist/similarity-validator*",
-    "pkg",
+    "pkg/web",
     "src",
     "docs",
     "LICENSE",
@@ -23,7 +23,7 @@
     }
   },
   "scripts": {
-    "build:wasm": "wasm-pack build --target web --out-dir pkg/web",
+    "build:wasm": "wasm-pack build --target web --out-dir pkg/web && node scripts/prepare-wasm-package.js",
     "build:ts": "tsc",
     "build": "npm run build:wasm && npm run build:ts",
     "pretest": "make version-check",
