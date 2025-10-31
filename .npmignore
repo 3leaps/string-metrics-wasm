@@ -1,42 +1,64 @@
-# Source control
-.git/
-.gitignore
-.github/
+# .npmignore - Controls what gets published to npm
+# NOTE: Unlike .gitignore, we WANT to include build artifacts (dist/, pkg/)
 
-# Build artifacts (Rust)
-target/
-*.rs.bk
-
-# Development
-node_modules/
-.claude/
+# Development and testing
+tests/
+*.test.ts
+*.test.js
+*.spec.ts
+*.spec.js
+.plans/
 .vscode/
 .idea/
 
-# Tests (available in repo, not needed in published package)
-tests/
-coverage/
+# CI/CD and tooling config
+.github/
+.husky/
+.cline/
 
-# Similarity validator (dev tool, not for consumers)
-dist/similarity-validator*
-similarity-validator/
-
-# Build tooling
-Makefile
+# Build tooling config (not needed at runtime)
 tsconfig.json
 biome.json
 .prettierrc.json
 .prettierignore
+vitest.config.ts
+Makefile
 
-# Planning and internal docs (keep docs/ for users)
-.plans/
+# Development scripts
+scripts/
+benchmark*.js
+bench.js
 
-# Logs and temp files
-*.log
+# Rust development files (source is included, but not these)
+target/
+**/*.rs.bk
+*.pdb
+wasm-pack.log
+Cargo.lock
+rustfmt.toml
+.cargo/
+
+# Node/npm
+node_modules/
 npm-debug.log*
-*.tmp
-.DS_Store
-Thumbs.db
-
-# Lock files (package will use consumer's versions)
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
 package-lock.json
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# Exclude validator binary (already excluded via package.json "files" but be explicit)
+dist/similarity-validator*
+similarity-validator/
+
+# Docs we don't need in package (keep docs/ folder for user guides)
+AGENTS.md
+CONTRIBUTING.md
+
+# IMPORTANT: DO NOT exclude dist/ or pkg/ - these are needed at runtime!
+# dist/ contains compiled TypeScript
+# pkg/ contains compiled WASM files
