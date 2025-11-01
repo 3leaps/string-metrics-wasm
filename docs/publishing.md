@@ -67,11 +67,27 @@ Instructions for maintainers releasing `@3leaps/string-metrics-wasm` to npm.
     ```
     **⚠️ IMPORTANT**: The `--access public` flag is **required** for scoped packages (@3leaps/...).
     Without it, npm defaults to private access, which requires a paid organization plan.
-13. **Post-publish verification** - Smoke-test the published version:
+13. **Post-publish verification** - Run automated verification script:
+
     ```bash
-    npm install @3leaps/string-metrics-wasm@X.Y.Z
+    # Verify specific version
+    node scripts/verify-published-package.cjs X.Y.Z
+
+    # Or verify latest
+    node scripts/verify-published-package.cjs
     ```
-14. Create GitHub release from tag with release notes.
+
+    This script:
+    - Installs the package in a clean temp directory
+    - Verifies WASM files are present (227KB)
+    - Tests core functions (levenshtein, jaro_winkler, normalize)
+    - Tests locale-aware normalization (v0.3.8+)
+    - Tests RapidFuzz compatibility (ratio)
+    - Cleans up automatically
+
+    **Expected output**: `✅ Package verification PASSED`
+
+14. Create GitHub release from tag with release notes (already automated by CI).
 
 ## What `npm publish` Does
 
