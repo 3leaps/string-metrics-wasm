@@ -113,16 +113,19 @@ Typical published package size: ~270 kB compressed (WASM included), ~400 kB unpa
 
 ### WASM Packaging Pattern (CRITICAL)
 
-**Why we DON'T use `.npmignore`:**
+**Why we MUST use `.npmignore`:**
 
-This project does NOT use `.npmignore` because of a subtle npm behavior with nested gitignores:
+This project uses `.npmignore` to solve a double-gitignore problem:
 
-1. **wasm-pack creates** `pkg/web/.gitignore` with `*` (ignore everything) to keep the directory
-   clean
-2. **npm respects nested gitignores** even when parent directories are explicitly included
-3. **Result**: Even with `"pkg/web"` in `package.json` files array, the WASM files were excluded
+1. **Root `.gitignore`** has `pkg/` to keep build artifacts out of git
+2. **wasm-pack creates** `pkg/web/.gitignore` with `*` (ignore everything)
+3. **npm respects BOTH gitignores** even when `"pkg/web"` is in `package.json` files array
+4. **Result**: WASM files were excluded from the npm package
 
-**Our solution: Build-time cleanup**
+**Our solution: Dual approach**
+
+1. **`.npmignore`**: Explicitly allows `pkg/web` to override root `.gitignore` for npm packaging
+2. **Build-time cleanup**: `prepare-wasm-package.js` script deletes nested `.gitignore`
 
 ```json
 // package.json

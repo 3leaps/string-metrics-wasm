@@ -106,7 +106,7 @@ jobs:
       - name: Check package contents
         run: |
           npm pack --dry-run
-          npm pack --dry-run | grep -q "pkg/web/string_metrics_wasm_bg.wasm" || (echo "❌ WASM files missing from package" && exit 1)
+          npm pack --dry-run 2>&1 | grep -q "pkg/web/string_metrics_wasm_bg.wasm" || (echo "❌ WASM files missing from package" && exit 1)
           echo "✅ WASM files verified in package"
 
   # Release job (only on tags)

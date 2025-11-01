@@ -1,0 +1,45 @@
+# .npmignore - Controls what gets published to npm
+#
+# IMPORTANT: We need this file to override .gitignore for the pkg/web directory.
+# Without this, the root .gitignore's "pkg/" line would prevent WASM files
+# from being included in the npm package, even though they're in package.json "files".
+#
+# Strategy:
+# 1. Ignore everything by default (safety first)
+# 2. Un-ignore only what we explicitly want to publish (allowlist approach)
+
+# Ignore everything
+*
+
+# Un-ignore published files (must match package.json "files" field)
+!dist/
+!dist/**
+dist/similarity-validator*
+
+!pkg/
+!pkg/web/
+!pkg/web/**
+
+!src/
+!src/**
+
+!docs/
+!docs/**
+
+!LICENSE
+!README.md
+!Cargo.toml
+!package.json
+
+# Explicitly ignore common development files (belt and suspenders)
+.git
+.github/
+node_modules/
+tests/
+target/
+.plans/
+.vscode/
+.idea/
+*.log
+.env*
+coverage/
