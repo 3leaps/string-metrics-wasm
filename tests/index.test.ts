@@ -418,3 +418,103 @@ describe('API compatibility aliases', () => {
     expect(suggestions[0].value).toBe('world hello');
   });
 });
+
+describe('Unified API metric coverage', () => {
+  // Exercises every dispatch arm of score()/distance()/suggest(), including
+  // camelCase + snake_case aliases, so the dual-naming contract is fully covered.
+  const similarityMetrics: SimilarityMetric[] = [
+    'levenshtein',
+    'damerauLevenshtein',
+    'damerau_unrestricted',
+    'osa',
+    'damerau_osa',
+    'jaro',
+    'jaroWinkler',
+    'jaro_winkler',
+    'indel',
+    'lcsSeq',
+    'lcs_seq',
+    'ratio',
+    'partialRatio',
+    'tokenSortRatio',
+    'tokenSetRatio',
+  ];
+
+  it.each(similarityMetrics)('score() returns a normalized 0-1 value for %s', (metric) => {
+    const value = score('kitten', 'sitting', metric);
+    expect(typeof value).toBe('number');
+    expect(value).toBeGreaterThanOrEqual(0);
+    expect(value).toBeLessThanOrEqual(1);
+  });
+
+  const distanceMetrics: DistanceMetric[] = [
+    'levenshtein',
+    'damerauLevenshtein',
+    'damerau_unrestricted',
+    'osa',
+    'damerau_osa',
+    'indel',
+    'lcsSeq',
+    'lcs_seq',
+  ];
+
+  it.each(distanceMetrics)('distance() returns a non-negative integer for %s', (metric) => {
+    const value = distance('kitten', 'sitting', metric);
+    expect(typeof value).toBe('number');
+    expect(value).toBeGreaterThanOrEqual(0);
+    expect(Number.isInteger(value)).toBe(true);
+  });
+
+  const suggestMetrics: SuggestMetric[] = [
+    'levenshtein',
+    'damerauOsa',
+    'damerau_osa',
+    'damerauUnrestricted',
+    'damerau_unrestricted',
+    'jaro',
+    'jaroWinkler',
+    'substring',
+    'ratio',
+    'partialRatio',
+    'partial_ratio',
+    'tokenSortRatio',
+    'tokenSetRatio',
+    'token_set_ratio',
+    'indel',
+    'lcsSeq',
+    'lcs_seq',
+  ];
+
+  it.each(suggestMetrics)('suggest() scores every candidate for %s', (metric) => {
+    const results = suggest('kitten', ['sitting', 'kitten'], { metric, minScore: 0 });
+    expect(results).toHaveLength(2);
+    for (const entry of results) {
+      expect(typeof entry.score).toBe('number');
+      expect(entry.score).toBeGreaterThanOrEqual(0);
+      expect(entry.score).toBeLessThanOrEqual(1);
+      expect(typeof entry.reason).toBe('string');
+    }
+  });
+
+  it('tokenSetRatio() returns 0 when exactly one input has no tokens', () => {
+    expect(tokenSetRatio('', 'hello world')).toBe(0);
+  });
+
+  it('throws on an unknown distance metric', () => {
+    expect(() => distance('a', 'b', 'bogus' as unknown as DistanceMetric)).toThrow(
+      /Unknown distance metric/,
+    );
+  });
+
+  it('throws on an unknown similarity metric', () => {
+    expect(() => score('a', 'b', 'bogus' as unknown as SimilarityMetric)).toThrow(
+      /Unknown similarity metric/,
+    );
+  });
+
+  it('throws on an unknown suggestion metric', () => {
+    expect(() => suggest('a', ['b'], { metric: 'bogus' as unknown as SuggestMetric })).toThrow(
+      /Unknown suggestion metric/,
+    );
+  });
+});

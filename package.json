@@ -57,17 +57,16 @@
     "url": "https://github.com/3leaps/string-metrics-wasm.git"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.0.0",
+    "@biomejs/biome": "^2.5.0",
     "@types/js-yaml": "^4.0.9",
-    "@types/node": "^20.19.23",
-    "@vitest/browser": "^1.0.0",
-    "@vitest/coverage-v8": "^1.6.1",
+    "@types/node": "^24.13.2",
+    "@vitest/coverage-v8": "^4.1.8",
     "husky": "^9.1.7",
-    "js-yaml": "^4.1.0",
+    "js-yaml": "^4.2.0",
     "license-checker": "^25.0.1",
-    "prettier": "^3.6.0",
-    "typescript": "^5.0.0",
-    "vitest": "^1.0.0",
-    "wasm-pack": "^0.13.0"
+    "prettier": "^3.8.4",
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.8",
+    "wasm-pack": "^0.13.1"
   }
 }

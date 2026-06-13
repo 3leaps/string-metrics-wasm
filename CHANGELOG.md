@@ -7,6 +7,25 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Changed
+
+- **Toolchain refresh (routine maintenance)**
+  - Upgraded the test stack to **Vitest 4** (`vitest`, `@vitest/coverage-v8`) and migrated coverage
+    thresholds to the `coverage.thresholds` config shape required by Vitest 2+.
+  - Bumped `@types/node` to v24 and refreshed routine dev dependencies (Biome, Prettier, TypeScript,
+    js-yaml) within their existing ranges. `wasm-pack` remains pinned to 0.13.x.
+  - Removed the unused `@vitest/browser` dev dependency (no browser-mode tests are configured).
+
+- **CI**
+  - Updated the test matrix to run on **Node.js 22 and 24** (replacing end-of-life Node 20).
+
+### Added
+
+- **Tests**
+  - Added unified-API coverage for every `score()`, `distance()`, and `suggest()` metric arm
+    (camelCase and snake_case aliases) plus unknown-metric error paths, restoring 90%+ coverage
+    under Vitest 4's AST-aware measurement.
+
 ## [0.3.8] - 2025-10-31
 
 ### Added
