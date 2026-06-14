@@ -1,38 +1,38 @@
-import wasm from './wasm.js';
+import { getWasm } from './wasm.js';
 
 export type NormalizationPreset = 'none' | 'minimal' | 'default' | 'aggressive';
 export type NormalizationLocale = 'tr' | 'az' | 'lt';
 
 export function levenshtein(a: string, b: string): number {
-  return wasm.levenshtein(a, b);
+  return getWasm().levenshtein(a, b);
 }
 
 export function normalized_levenshtein(a: string, b: string): number {
-  return wasm.normalized_levenshtein(a, b);
+  return getWasm().normalized_levenshtein(a, b);
 }
 
 export function osa_distance(a: string, b: string): number {
-  return wasm.osa_distance(a, b);
+  return getWasm().osa_distance(a, b);
 }
 
 export function normalized_osa_similarity(a: string, b: string): number {
-  return wasm.normalized_osa_similarity(a, b);
+  return getWasm().normalized_osa_similarity(a, b);
 }
 
 export function damerau_levenshtein(a: string, b: string): number {
-  return wasm.damerau_levenshtein(a, b);
+  return getWasm().damerau_levenshtein(a, b);
 }
 
 export function normalized_damerau_levenshtein(a: string, b: string): number {
-  return wasm.normalized_damerau_levenshtein(a, b);
+  return getWasm().normalized_damerau_levenshtein(a, b);
 }
 
 export function jaro(a: string, b: string): number {
-  return wasm.jaro(a, b);
+  return getWasm().jaro(a, b);
 }
 
 export function jaro_winkler(a: string, b: string): number {
-  return wasm.jaro_winkler(a, b);
+  return getWasm().jaro_winkler(a, b);
 }
 
 export function jaro_winkler_custom(
@@ -42,7 +42,7 @@ export function jaro_winkler_custom(
 ): number {
   const prefixScale = options.prefix_scale ?? 0.1;
   const maxPrefix = options.max_prefix ?? 4;
-  return wasm.jaro_winkler_with_params(a, b, prefixScale, maxPrefix);
+  return getWasm().jaro_winkler_with_params(a, b, prefixScale, maxPrefix);
 }
 
 /**
@@ -64,9 +64,9 @@ export function normalize(
   locale?: NormalizationLocale,
 ): string {
   if (locale !== undefined) {
-    return wasm.normalize_with_locale(input, preset, locale);
+    return getWasm().normalize_with_locale(input, preset, locale);
   }
-  return wasm.normalize(input, preset);
+  return getWasm().normalize(input, preset);
 }
 
 // ============================================================================
@@ -78,7 +78,7 @@ export function normalize(
  * Returns similarity score as percentage (0-100)
  */
 export function ratio(a: string, b: string): number {
-  return wasm.ratio(a, b);
+  return getWasm().ratio(a, b);
 }
 
 // ============================================================================
@@ -90,14 +90,14 @@ export function ratio(a: string, b: string): number {
  * Returns the minimum number of insertions and deletions required
  */
 export function indel_distance(a: string, b: string): number {
-  return wasm.indel_distance(a, b);
+  return getWasm().indel_distance(a, b);
 }
 
 /**
  * Normalized Indel similarity (0.0-1.0 scale)
  */
 export function indel_normalized_similarity(a: string, b: string): number {
-  return wasm.indel_normalized_similarity(a, b);
+  return getWasm().indel_normalized_similarity(a, b);
 }
 
 // ============================================================================
@@ -108,21 +108,21 @@ export function indel_normalized_similarity(a: string, b: string): number {
  * LCS distance - number of characters that need to be added/removed
  */
 export function lcs_seq_distance(a: string, b: string): number {
-  return wasm.lcs_seq_distance(a, b);
+  return getWasm().lcs_seq_distance(a, b);
 }
 
 /**
  * LCS similarity - length of the longest common subsequence
  */
 export function lcs_seq_similarity(a: string, b: string): number {
-  return wasm.lcs_seq_similarity(a, b);
+  return getWasm().lcs_seq_similarity(a, b);
 }
 
 /**
  * Normalized LCS similarity (0.0-1.0 scale)
  */
 export function lcs_seq_normalized_similarity(a: string, b: string): number {
-  return wasm.lcs_seq_normalized_similarity(a, b);
+  return getWasm().lcs_seq_normalized_similarity(a, b);
 }
 
 // ============================================================================

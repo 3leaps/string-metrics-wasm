@@ -1,3 +1,6 @@
+import * as glue from '../pkg/web/string_metrics_wasm.js';
+import { WASM_BASE64 } from './wasm-inline.js';
+
 type WasmBindings = {
   levenshtein(a: string, b: string): number;
   normalized_levenshtein(a: string, b: string): number;
@@ -21,46 +24,44 @@ type WasmBindings = {
   lcs_seq_normalized_similarity(a: string, b: string): number;
 };
 
-const loadWasm = async (): Promise<WasmBindings> => {
-  const globalAny = globalThis as typeof globalThis & {
-    process?: { versions?: Record<string, string | undefined> };
-    Deno?: { readFile?: (path: string | URL) => Promise<Uint8Array> };
-  };
-
-  const isNodeLike =
-    typeof globalAny.process !== 'undefined' &&
-    typeof globalAny.process.versions === 'object' &&
-    (typeof globalAny.process.versions.node === 'string' ||
-      typeof globalAny.process.versions.bun === 'string');
-  const isDeno = typeof globalAny.Deno?.readFile === 'function';
-
-  const wasmUrl = new URL('../pkg/web/string_metrics_wasm_bg.wasm', import.meta.url);
-  const wasmModule = await import('../pkg/web/string_metrics_wasm.js');
-
-  if (isNodeLike) {
-    const { readFileSync } = await import('node:fs');
-    const buf = readFileSync(wasmUrl);
-    wasmModule.initSync({ module: new WebAssembly.Module(buf) });
-    return wasmModule;
+// Decode the embedded base64 WASM into bytes, using whichever primitive the
+// runtime provides (Buffer on Node/Bun, atob elsewhere). Kept dependency-free
+// and synchronous so initialization never needs a filesystem read or top-level
+// await — this is what lets the package run inside standalone compiled binaries
+// and bundlers that don't trace runtime asset paths.
+const decodeBase64 = (b64: string): Uint8Array<ArrayBuffer> => {
+  const globalBuffer = (globalThis as { Buffer?: { from(s: string, enc: string): Uint8Array } })
+    .Buffer;
+  if (typeof globalBuffer !== 'undefined') {
+    // Copy into a fresh ArrayBuffer-backed view (Buffer is ArrayBufferLike-typed).
+    return new Uint8Array(globalBuffer.from(b64, 'base64'));
   }
-
-  if (isDeno && globalAny.Deno?.readFile) {
-    const rawBytes = await globalAny.Deno.readFile(wasmUrl);
-    const wasmBytes = rawBytes.subarray
-      ? rawBytes.subarray(0, rawBytes.byteLength)
-      : new Uint8Array(rawBytes);
-    const moduleSource = wasmBytes.buffer.slice(
-      wasmBytes.byteOffset,
-      wasmBytes.byteOffset + wasmBytes.byteLength,
-    );
-    wasmModule.initSync({ module: new WebAssembly.Module(moduleSource as ArrayBuffer) });
-    return wasmModule;
+  const binary = atob(b64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) {
+    bytes[i] = binary.charCodeAt(i);
   }
-
-  await wasmModule.default(wasmUrl);
-  return wasmModule;
+  return bytes;
 };
 
-const wasm = await loadWasm();
+let initialized = false;
 
-export default wasm;
+// Initialize the WASM module exactly once, on first use (lazy). Importing this
+// package has no side effects, so consumers that never call a metric — including
+// standalone binaries that only import the module — incur no init and no crash.
+const ensureInitialized = (): void => {
+  if (initialized) {
+    return;
+  }
+  glue.initSync({ module: new WebAssembly.Module(decodeBase64(WASM_BASE64)) });
+  initialized = true;
+};
+
+/**
+ * Returns the initialized WASM bindings, initializing on first call.
+ * Synchronous: safe to call from the library's synchronous public API.
+ */
+export const getWasm = (): WasmBindings => {
+  ensureInitialized();
+  return glue as unknown as WasmBindings;
+};

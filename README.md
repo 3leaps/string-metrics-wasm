@@ -333,6 +333,16 @@ Token-based metrics benefit from TypeScript's array operations and avoid WASM se
 overhead. The unified API provides a convenient abstraction over both WASM and TypeScript
 implementations.
 
+### WASM Initialization
+
+The WASM binary is embedded in the published JavaScript and initialized **lazily on first use** —
+importing the package performs no work and reads no files. Initialization is synchronous, so the
+public API stays synchronous; the first call to a metric triggers a one-time module instantiation.
+
+Because the bytes are embedded rather than read from a sibling `.wasm` file at runtime, the library
+works inside bundlers and **standalone compiled binaries** (e.g. `bun build --compile`) without any
+extra asset-handling configuration.
+
 ### Supported Runtimes
 
 - **Node.js** 16+ (ESM and CommonJS)
