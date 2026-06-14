@@ -101,6 +101,9 @@ jobs:
         run: npm test
 
       - name: Check package contents
+        # Pin to bash: Windows runners default to PowerShell, which can't parse
+        # this script's shell control flow.
+        shell: bash
         run: |
           contents=$(npm pack --dry-run 2>&1)
           echo "$contents"
