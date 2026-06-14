@@ -23,7 +23,7 @@
     }
   },
   "scripts": {
-    "build:wasm": "wasm-pack build --target web --out-dir pkg/web && node scripts/prepare-wasm-package.js",
+    "build:wasm": "wasm-pack build --target web --out-dir pkg/web && node scripts/embed-wasm.js && node scripts/prepare-wasm-package.js",
     "build:ts": "tsc",
     "build": "npm run build:wasm && npm run build:ts",
     "pretest": "make version-check",

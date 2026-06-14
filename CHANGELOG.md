@@ -7,6 +7,15 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Fixed
+
+- **Standalone-binary / bundler packaging**
+  - The WASM binary is now embedded (base64) and initialized **lazily on first use**, replacing the
+    eager top-level `readFileSync` of a sibling `.wasm` asset. This fixes startup crashes (`ENOENT`)
+    when the library is bundled into standalone compiled binaries (e.g. `bun build --compile`) where
+    the asset path is rewritten but not embedded, and makes importing the package side-effect-free —
+    consumers that never call a metric incur no initialization. The public API is unchanged.
+
 ### Changed
 
 - **Toolchain refresh (routine maintenance)**
