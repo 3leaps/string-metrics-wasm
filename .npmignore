@@ -19,9 +19,16 @@ dist/similarity-validator*
 !pkg/
 !pkg/web/
 !pkg/web/**
+# The raw WASM binary is now embedded (base64) in dist/wasm-inline.js and loaded
+# via initSync; the loader never reads this file at runtime. Keep the JS glue
+# (string_metrics_wasm.js) but drop the redundant ~233 KB binary from the tarball.
+pkg/web/string_metrics_wasm_bg.wasm
 
 !src/
 !src/**
+# Generated base64 WASM blob: the compiled dist/wasm-inline.js is what ships and
+# runs; the ~300 KB source copy is redundant in the published package.
+src/wasm-inline.ts
 
 !docs/
 !docs/**

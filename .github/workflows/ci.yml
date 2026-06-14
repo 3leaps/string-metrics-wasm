@@ -102,9 +102,14 @@ jobs:
 
       - name: Check package contents
         run: |
-          npm pack --dry-run
-          npm pack --dry-run 2>&1 | grep -q "pkg/web/string_metrics_wasm_bg.wasm" || (echo "❌ WASM files missing from package" && exit 1)
-          echo "✅ WASM files verified in package"
+          contents=$(npm pack --dry-run 2>&1)
+          echo "$contents"
+          echo "$contents" | grep -q "dist/wasm-inline.js" || (echo "❌ Embedded WASM (dist/wasm-inline.js) missing from package" && exit 1)
+          echo "$contents" | grep -q "pkg/web/string_metrics_wasm.js" || (echo "❌ WASM JS glue (pkg/web/string_metrics_wasm.js) missing from package" && exit 1)
+          if echo "$contents" | grep -qE "string_metrics_wasm_bg\.wasm$"; then
+            echo "❌ Redundant raw .wasm should not be published (it is embedded in dist/wasm-inline.js)" && exit 1
+          fi
+          echo "✅ Package contains embedded WASM + JS glue; redundant raw .wasm excluded"
 
   # Release job (only on tags)
   release:
