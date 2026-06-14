@@ -5,7 +5,7 @@
  *
  * Validates that a published npm package:
  * - Installs correctly
- * - Includes WASM files
+ * - Ships the embedded WASM contract (embedded dist/wasm-inline.js + JS glue, no raw .wasm)
  * - Core functions work
  * - New features work (locale-aware normalization)
  *
@@ -54,28 +54,35 @@ try {
   );
   console.log('✅ Installed version:', installedVersion);
 
-  // Verify WASM file exists
+  // Verify the embedded-WASM package contract: the WASM bytes ship embedded in
+  // dist/wasm-inline.js (loaded via initSync), the JS glue is present, and the
+  // raw .wasm binary is NOT published (it would be dead weight).
   console.log('');
-  console.log('🔍 Verifying WASM files...');
-  const wasmPath = path.join(
-    tempDir,
-    'node_modules',
-    '@3leaps',
-    'string-metrics-wasm',
-    'pkg',
-    'web',
-    'string_metrics_wasm_bg.wasm',
-  );
+  console.log('🔍 Verifying package contents (embedded-WASM contract)...');
+  const pkgRoot = path.join(tempDir, 'node_modules', '@3leaps', 'string-metrics-wasm');
+  const embeddedPath = path.join(pkgRoot, 'dist', 'wasm-inline.js');
+  const gluePath = path.join(pkgRoot, 'pkg', 'web', 'string_metrics_wasm.js');
+  const rawWasmPath = path.join(pkgRoot, 'pkg', 'web', 'string_metrics_wasm_bg.wasm');
 
-  if (!fs.existsSync(wasmPath)) {
-    console.error('❌ WASM file not found at:', wasmPath);
+  if (!fs.existsSync(embeddedPath)) {
+    console.error('❌ Embedded WASM not found at:', embeddedPath);
     exitCode = 1;
-    throw new Error('WASM file missing from package');
+    throw new Error('Embedded WASM (dist/wasm-inline.js) missing from package');
+  }
+  if (!fs.existsSync(gluePath)) {
+    console.error('❌ WASM JS glue not found at:', gluePath);
+    exitCode = 1;
+    throw new Error('WASM JS glue (pkg/web/string_metrics_wasm.js) missing from package');
+  }
+  if (fs.existsSync(rawWasmPath)) {
+    console.error('❌ Redundant raw .wasm should not be published:', rawWasmPath);
+    exitCode = 1;
+    throw new Error('Redundant raw .wasm present in package (expected embedded-only)');
   }
 
-  const wasmStats = fs.statSync(wasmPath);
-  const wasmSizeKB = Math.round(wasmStats.size / 1024);
-  console.log('✅ WASM file found:', `${wasmSizeKB}KB`);
+  const embeddedSizeKB = Math.round(fs.statSync(embeddedPath).size / 1024);
+  console.log('✅ Embedded WASM present:', `dist/wasm-inline.js (${embeddedSizeKB}KB)`);
+  console.log('✅ JS glue present; redundant raw .wasm correctly absent');
 
   // Test package functionality
   console.log('');
@@ -152,7 +159,7 @@ console.log('✅ All tests passed!');
 console.log('');
 console.log('📊 Package verification summary:');
 console.log('  Package: ${PACKAGE_NAME}@${installedVersion}');
-console.log('  WASM size: ${wasmSizeKB}KB');
+console.log('  Embedded WASM size: ${embeddedSizeKB}KB');
 console.log('  Core metrics: ✅');
 console.log('  Locale normalization: ✅');
 console.log('  RapidFuzz compatibility: ✅');

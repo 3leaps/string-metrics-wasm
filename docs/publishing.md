@@ -79,7 +79,8 @@ Instructions for maintainers releasing `@3leaps/string-metrics-wasm` to npm.
 
     This script:
     - Installs the package in a clean temp directory
-    - Verifies WASM files are present (227KB)
+    - Verifies the embedded-WASM contract: `dist/wasm-inline.js` + JS glue present, raw `.wasm`
+      absent
     - Tests core functions (levenshtein, jaro_winkler, normalize)
     - Tests locale-aware normalization (v0.3.8+)
     - Tests RapidFuzz compatibility (ratio)
@@ -104,62 +105,57 @@ This ensures:
   - **Lint warnings treated as errors** (`--error-on-warnings` flag in Makefile)
 - TypeScript type checking passes (`tsc --noEmit`)
 - Rust formatting/lints succeed (`cargo fmt --check`, `cargo clippy -- -D warnings`)
-- WASM and TypeScript bundles are regenerated (`pkg/web/*`, `dist/*`)
+- WASM and TypeScript bundles are regenerated (`pkg/web/*`, embedded `src/wasm-inline.ts`, `dist/*`)
 
 If any command fails, the publish is aborted. This gate prevents broken releases like v0.3.5
 (missing WASM files) from reaching npm.
 
 ## Published Artifacts
 
-The npm tarball includes:
+Since v0.3.9 the WASM binary is **embedded** (base64) in the JS bundle and loaded synchronously via
+`initSync`; the loader never reads a `.wasm` file at runtime. The npm tarball includes:
 
-- `dist/` – compiled ESM bundle and type declarations
-- **`pkg/web/`** – wasm-pack output with WASM binary (231 kB)
+- `dist/` – compiled ESM bundle and type declarations, including **`dist/wasm-inline.js`** (the
+  embedded base64 WASM, ~311 kB; compresses well, so packed size stays small)
+- **`pkg/web/string_metrics_wasm.js`** – the wasm-bindgen JS glue (~15 kB), still required at
+  runtime
 - `src/` – Rust and TypeScript sources for transparency
 - `docs/` – developer and maintainer documentation
 - `Cargo.toml`, `LICENSE`, `README.md`
 
-**Excluded** (via `package.json` "files" field):
+**Excluded** (via `package.json` "files" negations):
 
-- `dist/similarity-validator*` – dev tool binary (saves ~800KB)
+- **`pkg/web/string_metrics_wasm_bg.wasm`** – the raw WASM binary; redundant now that it ships
+  embedded in `dist/wasm-inline.js` (saves ~233 kB)
+- **`src/wasm-inline.ts`** – the generated base64 source blob; the compiled `dist/wasm-inline.js` is
+  what ships (saves ~311 kB)
+- `dist/similarity-validator*` – dev tool binary
 - `tests/`, `node_modules/`, `.plans/` – gitignored or dev-only
-- Build tooling and configuration files
 
-Typical published package size: ~270 kB compressed (WASM included), ~400 kB unpacked.
+Typical published package size: ~180 kB compressed, ~520 kB unpacked.
 
 ### WASM Packaging Pattern (CRITICAL)
 
-**Why we MUST use `.npmignore`:**
+The WASM bytes ship **embedded** in `dist/wasm-inline.js` (generated at build time by
+`scripts/embed-wasm.js`). The wasm-bindgen JS glue (`pkg/web/string_metrics_wasm.js`) is still
+published and imported by the loader; the **raw `.wasm` binary is intentionally not published**.
 
-This project uses `.npmignore` to solve a double-gitignore problem:
-
-1. **Root `.gitignore`** has `pkg/` to keep build artifacts out of git
-2. **wasm-pack creates** `pkg/web/.gitignore` with `*` (ignore everything)
-3. **npm respects BOTH gitignores** even when `"pkg/web"` is in `package.json` files array
-4. **Result**: WASM files were excluded from the npm package
-
-**Our solution: Dual approach**
-
-1. **`.npmignore`**: Explicitly allows `pkg/web` to override root `.gitignore` for npm packaging
-2. **Build-time cleanup**: `prepare-wasm-package.js` script deletes nested `.gitignore`
+**Why we still need `.npmignore`** (for the glue): wasm-pack writes a `pkg/web/.gitignore` with `*`,
+and the root `.gitignore` has `pkg/`, so npm would otherwise exclude all of `pkg/web/` even though
+it is in the `files` array. The `.npmignore` un-ignores `pkg/web/**`, and `prepare-wasm-package.js`
+deletes the nested `pkg/web/.gitignore` at build time.
 
 ```json
 // package.json
-"build:wasm": "wasm-pack build --target web --out-dir pkg/web && node scripts/prepare-wasm-package.js"
+"build:wasm": "wasm-pack build --target web --out-dir pkg/web && node scripts/embed-wasm.js && node scripts/prepare-wasm-package.js"
 ```
 
-The `prepare-wasm-package.js` script runs after wasm-pack and:
+The redundant raw `.wasm` and the generated `src/wasm-inline.ts` are then excluded via `files`
+negations in `package.json` (and mirrored in `.npmignore`):
 
-- Deletes `pkg/web/.gitignore` (the blocker)
-- Cleans stale `dist/wasm/` artifacts
-- Allows `pkg/web/` contents to be packaged by npm
-
-**Why this works:**
-
-- Surgical fix: Only removes the problematic ignore file
-- Build-time: Happens during `npm run build`, not at commit time
-- Safe: `pkg/web/` remains in `.gitignore` for source control (build artifacts)
-- Idempotent: Uses `force: true` so script won't fail if files missing
+```json
+"files": ["dist", "...", "pkg/web", "!pkg/web/string_metrics_wasm_bg.wasm", "src", "!src/wasm-inline.ts", "..."]
+```
 
 **Verification is CRITICAL:**
 
@@ -169,15 +165,18 @@ Always run before publishing:
 npm pack --dry-run
 ```
 
-Look for these files in "Tarball Contents":
+Confirm the package contract in "Tarball Contents":
 
 ```
-pkg/web/string_metrics_wasm_bg.wasm    (231 kB)  ← MUST BE PRESENT
-pkg/web/string_metrics_wasm.js         (14 kB)
-pkg/web/string_metrics_wasm.d.ts       (4.5 kB)
+dist/wasm-inline.js                    (~311 kB)  ← MUST BE PRESENT (embedded WASM)
+pkg/web/string_metrics_wasm.js         (~15 kB)   ← MUST BE PRESENT (JS glue)
+pkg/web/string_metrics_wasm_bg.wasm               ← MUST BE ABSENT (redundant; embedded instead)
+src/wasm-inline.ts                                ← MUST BE ABSENT (redundant generated blob)
 ```
 
-If `pkg/web/` is missing, the package is broken and imports will fail.
+The CI "Check package contents" job and `scripts/verify-published-package.cjs` both assert this
+contract. If `dist/wasm-inline.js` or the JS glue is missing, imports will fail; if the raw `.wasm`
+reappears, the package is shipping dead weight.
 
 ## Post-Publish
 

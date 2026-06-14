@@ -18,6 +18,13 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- **Smaller published package**
+  - Reduced the npm package from ~545 kB to ~180 kB packed. Typed the generated embedded-WASM
+    constant as `string` so its declaration file is one line instead of a ~300 kB inferred string
+    literal type, and stopped publishing two now-redundant copies of the binary: the generated
+    `src/wasm-inline.ts` source blob and the raw `pkg/web/*.wasm` (the bytes ship embedded in
+    `dist/wasm-inline.js`; the JS glue is still published). No runtime or API change.
+
 - **Toolchain refresh (routine maintenance)**
   - Upgraded the test stack to **Vitest 4** (`vitest`, `@vitest/coverage-v8`) and migrated coverage
     thresholds to the `coverage.thresholds` config shape required by Vitest 2+.
