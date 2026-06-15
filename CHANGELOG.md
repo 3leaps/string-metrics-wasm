@@ -7,6 +7,21 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Changed
+
+- **Release process**
+  - Added `RELEASE_CHECKLIST.md` — the authoritative checkbox release checklist (prerequisites →
+    signed tag → publish → sign artifacts → verify), adapted from the fulmenhq/tsfulmen library
+    pattern and using 3 Leaps key materials.
+  - Release tags are now **GPG-signed** (`git tag -s`) with the 3 Leaps key; `docs/publishing.md`
+    and `AGENTS.md` updated to require and document signed tags.
+  - Released artifacts are now signed — `SHA256SUMS`/`SHA512SUMS` plus **minisign** signatures (3
+    Leaps key) attached to the GitHub Release.
+  - Hardened the CI release job: it guards that the tag matches `package.json`, requires the
+    per-version `docs/releases/vX.Y.Z.md` notes, fails on a missing tarball, and uses those notes as
+    the GitHub Release body. (Full OIDC automation and CI-side artifact signing remain deferred to a
+    later hardening pass.)
+
 ## [0.3.9] - 2026-06-15
 
 ### Fixed

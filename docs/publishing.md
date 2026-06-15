@@ -8,8 +8,14 @@ Instructions for maintainers releasing `@3leaps/string-metrics-wasm` to npm.
 - Member of @3leaps organization on npm with publish permissions
 - Clean working tree (commit or stash local changes)
 - Toolchain installed via `make bootstrap` (ensures `wasm-pack` 0.13.1 and npm deps)
+- `gpg` and `minisign` installed, and the **3 Leaps signing key** materials sourced
+  (`source (maintainer-configured environment)`) — release tags **must be GPG-signed**
 
 ## Release Checklist
+
+> **Use [`RELEASE_CHECKLIST.md`](../RELEASE_CHECKLIST.md)** as the authoritative checkbox release
+> checklist (prerequisites → signed tag → publish → verify). This guide is the expanded per-step
+> reference for the same flow.
 
 1. **Ensure clean working tree**: `git status` should show no uncommitted changes
 2. Confirm `Cargo.toml` and `package.json` share the target version (`make version-check`).
@@ -44,17 +50,29 @@ Instructions for maintainers releasing `@3leaps/string-metrics-wasm` to npm.
 8. **CRITICAL: Verify package contents and publish readiness BEFORE tagging**:
 
    ```bash
-   # Verify WASM files are included
-   npm pack --dry-run | grep pkg/web
+   # Confirm the slim embedded-WASM contract (see RELEASE_CHECKLIST.md and CI):
+   #   dist/wasm-inline.js present, pkg/web/string_metrics_wasm.js (glue) present,
+   #   pkg/web/string_metrics_wasm_bg.wasm ABSENT, src/wasm-inline.ts ABSENT (~180 kB packed)
+   npm pack --dry-run
 
    # Verify prepublishOnly hook passes (runs make quality && make build)
-   npm publish --dry-run
+   npm publish --dry-run --access public
    ```
 
-9. **Tag the release locally** (don't push yet):
+9. **Create a signed tag locally** (don't push yet). Release tags must be **GPG-signed** with the 3
+   Leaps key:
+
    ```bash
-   git tag -a vX.Y.Z -m "Release vX.Y.Z - brief description"
+   export GPG_TTY="$(tty)"
+   gpg-connect-agent updatestartuptty /bye
+   source (maintainer-configured environment)
+   export GNUPGHOME="$STRING_METRICS_WASM_GPG_HOMEDIR"
+   git config user.signingkey "$STRING_METRICS_WASM_PGP_KEY_ID"
+
+   git tag -s vX.Y.Z -m "Release vX.Y.Z - brief description"
+   git verify-tag vX.Y.Z   # MUST show a good signature from the 3 Leaps Infosec Team key
    ```
+
 10. **Push commit and tag to remote**:
     ```bash
     git push origin main
@@ -67,7 +85,21 @@ Instructions for maintainers releasing `@3leaps/string-metrics-wasm` to npm.
     ```
     **⚠️ IMPORTANT**: The `--access public` flag is **required** for scoped packages (@3leaps/...).
     Without it, npm defaults to private access, which requires a paid organization plan.
-13. **Post-publish verification** - Run automated verification script:
+13. **Sign the released artifact** (3 Leaps minisign key). Download the CI-attached tarball,
+    generate SHA256/512 checksums, sign them, and upload the sums + signatures to the release:
+    ```bash
+    source (maintainer-configured environment)
+    TARBALL="3leaps-string-metrics-wasm-X.Y.Z.tgz"
+    gh release download "vX.Y.Z" -p "$TARBALL"
+    shasum -a 256 "$TARBALL" > SHA256SUMS
+    shasum -a 512 "$TARBALL" > SHA512SUMS
+    minisign -S -s "$STRING_METRICS_WASM_MINISIGN_KEY" -m SHA256SUMS
+    minisign -S -s "$STRING_METRICS_WASM_MINISIGN_KEY" -m SHA512SUMS
+    gh release upload "vX.Y.Z" SHA256SUMS SHA256SUMS.minisig SHA512SUMS SHA512SUMS.minisig
+    ```
+    (CI-side artifact signing is a v0.4.x item; today the checksums + minisig are produced
+    manually.)
+14. **Post-publish verification** - Run automated verification script:
 
     ```bash
     # Verify specific version
@@ -88,7 +120,9 @@ Instructions for maintainers releasing `@3leaps/string-metrics-wasm` to npm.
 
     **Expected output**: `✅ Package verification PASSED`
 
-14. Create GitHub release from tag with release notes (already automated by CI).
+15. The GitHub Release is created automatically by CI when the signed tag is pushed (step 10–11).
+    The release job guards that the tag matches `package.json`, that `docs/releases/vX.Y.Z.md`
+    exists, and uses that file as the release body.
 
 ## What `npm publish` Does
 

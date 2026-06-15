@@ -38,7 +38,10 @@ Before making any changes, you **MUST** read these documents in order:
 
 Optional but recommended:
 
-- **[docs/publishing.md](docs/publishing.md)** - Release workflow (for maintainers)
+- **[RELEASE_CHECKLIST.md](RELEASE_CHECKLIST.md)** - Authoritative release checklist for maintainers
+  (prerequisites → **GPG-signed tag** → publish → verify). Release tags **must be signed** with the
+  3 Leaps key.
+- **[docs/publishing.md](docs/publishing.md)** - Expanded per-step publishing reference
 - **[Makefile](Makefile)** - Available targets and development commands
 - **[similarity-validator/README.md](similarity-validator/README.md)** - Fixture validator tool
   documentation
