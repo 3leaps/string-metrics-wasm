@@ -37,6 +37,10 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Doc hygiene
+        shell: bash
+        run: bash scripts/check-doc-hygiene.sh
+
       - name: Version sync check
         run: make version-check
 

@@ -4,8 +4,8 @@
 npm package published to npmjs.com plus a **GPG-signed git tag** for version tracking.
 
 This checklist adapts the fulmenhq/tsfulmen library release pattern to string-metrics-wasm's
-lighter, **manual-publish** flow, and uses **3 Leaps key materials** for tag signing. For expanded
-per-step detail see [docs/publishing.md](docs/publishing.md).
+lighter, **manual-publish** flow. For expanded per-step detail see
+[docs/publishing.md](docs/publishing.md).
 
 ## Release Model
 
@@ -18,16 +18,19 @@ publishes **manually**:
 3. **You do**: `npm publish --access public`, then post-publish verification.
 
 > Full OIDC automation and CI-side artifact signing are intentionally **out of scope** here (a
-> v0.4.x hardening item). This checklist's firm requirement is a **GPG-signed git tag** using the 3
-> Leaps key.
+> v0.4.x hardening item). This checklist's firm requirement is a **GPG-signed git tag**.
 
 ## Prerequisites (first-time setup)
 
 - [ ] `gpg` and `minisign` installed (`brew install gnupg minisign`)
-- [ ] **3 Leaps signing key materials** sourced: `source (maintainer-configured environment)`
-      (exports `STRING_METRICS_WASM_GPG_HOMEDIR` → `$STRING_METRICS_WASM_GPG_HOMEDIR`, `STRING_METRICS_WASM_PGP_KEY_ID` → the 3 Leaps
-      Infosec GPG key, and the 3 Leaps minisign keypair `STRING_METRICS_WASM_MINISIGN_KEY` /
-      `STRING_METRICS_WASM_MINISIGN_PUB`)
+- [ ] The release-signing **environment variables** below are exported in your shell. How they are
+      configured is a maintainer concern handled out-of-band — this checklist references variable
+      **names only** and never their values or locations:
+  - `STRING_METRICS_WASM_RELEASE_KEY` — the tag for this release (e.g. `v0.3.10`)
+  - `STRING_METRICS_WASM_GPG_HOMEDIR` — GnuPG home containing the signing key
+  - `STRING_METRICS_WASM_PGP_KEY_ID` — the GPG signing key id
+  - `STRING_METRICS_WASM_MINISIGN_KEY` / `STRING_METRICS_WASM_MINISIGN_PUB` — minisign secret/public
+    keys for artifact signing
 - [ ] `gh` CLI authenticated
 - [ ] `npm` logged in with publish access to the `@3leaps` scope (`npm whoami`)
 
@@ -66,34 +69,33 @@ export GPG_TTY="$(tty)"
 gpg-connect-agent updatestartuptty /bye
 ```
 
-### Step 2 — Point git at the 3 Leaps signing key
+### Step 2 — Point git at the signing key
 
 ```bash
-source (maintainer-configured environment)
 export GNUPGHOME="$STRING_METRICS_WASM_GPG_HOMEDIR"
-git config user.signingkey "$STRING_METRICS_WASM_PGP_KEY_ID"   # 3 Leaps Infosec GPG key
+git config user.signingkey "$STRING_METRICS_WASM_PGP_KEY_ID"
 ```
 
 ### Step 3 — Create the signed tag (local only — do not push yet)
 
 ```bash
-git tag -s "vX.Y.Z" -m "Release vX.Y.Z - <one-line summary>"
+git tag -s "$STRING_METRICS_WASM_RELEASE_KEY" -m "Release $STRING_METRICS_WASM_RELEASE_KEY - <one-line summary>"
 ```
 
 ### Step 4 — Verify the signature locally (MUST pass)
 
 ```bash
-git verify-tag "vX.Y.Z"
+git verify-tag "$STRING_METRICS_WASM_RELEASE_KEY"
 ```
 
-Expect a **Good signature** from the 3 Leaps Infosec Team key. If it fails, do not push — fix the
-key setup (see Troubleshooting) and re-tag.
+Expect a **Good signature** from the signing key. If it fails, do not push — fix the key setup (see
+Troubleshooting) and re-tag.
 
 ### Step 5 — Push main and the tag
 
 ```bash
 git push origin main
-git push origin "vX.Y.Z"
+git push origin "$STRING_METRICS_WASM_RELEASE_KEY"
 ```
 
 > **Point of no return for the GitHub release**: the tag push triggers `ci.yml`'s release job, which
@@ -105,32 +107,28 @@ git push origin "vX.Y.Z"
       created the GitHub Release with the package tarball attached and the per-version notes as the
       body
 - [ ] Publish to npm — `npm publish --access public`
-- [ ] Sign the released artifact with the 3 Leaps minisign key and attach the checksums + signatures
-      to the GitHub Release. Download the **CI-attached** tarball first so the checksums cover the
-      exact released bytes:
+- [ ] Sign the released artifact and attach the checksums + signatures to the GitHub Release.
+      Download the **CI-attached** tarball first so the checksums cover the exact released bytes:
 
 ```bash
-source (maintainer-configured environment)
-TARBALL="3leaps-string-metrics-wasm-X.Y.Z.tgz"
-
-gh release download "vX.Y.Z" -p "$TARBALL"             # the exact CI-attached tarball
-shasum -a 256 "$TARBALL" > SHA256SUMS
-shasum -a 512 "$TARBALL" > SHA512SUMS
-minisign -S -s "$STRING_METRICS_WASM_MINISIGN_KEY" -m SHA256SUMS    # → SHA256SUMS.minisig
-minisign -S -s "$STRING_METRICS_WASM_MINISIGN_KEY" -m SHA512SUMS    # → SHA512SUMS.minisig
-gh release upload "vX.Y.Z" SHA256SUMS SHA256SUMS.minisig SHA512SUMS SHA512SUMS.minisig
+gh release download "$STRING_METRICS_WASM_RELEASE_KEY" -p '3leaps-string-metrics-wasm-*.tgz'
+shasum -a 256 3leaps-string-metrics-wasm-*.tgz > SHA256SUMS
+shasum -a 512 3leaps-string-metrics-wasm-*.tgz > SHA512SUMS
+minisign -S -s "$STRING_METRICS_WASM_MINISIGN_KEY" -m SHA256SUMS   # → SHA256SUMS.minisig
+minisign -S -s "$STRING_METRICS_WASM_MINISIGN_KEY" -m SHA512SUMS   # → SHA512SUMS.minisig
+gh release upload "$STRING_METRICS_WASM_RELEASE_KEY" SHA256SUMS SHA256SUMS.minisig SHA512SUMS SHA512SUMS.minisig
 ```
 
-> Verifiers use the 3 Leaps minisign public key (`$STRING_METRICS_WASM_MINISIGN_PUB`), e.g.
-> `minisign -Vm SHA256SUMS -p <release-signing.pub>`. Moving SHA-sum + minisig generation
-> into the release workflow (CI-side) is a v0.4.x item.
+> Verifiers use the minisign public key in `$STRING_METRICS_WASM_MINISIGN_PUB`
+> (`minisign -Vm SHA256SUMS -p "$STRING_METRICS_WASM_MINISIGN_PUB"`). Moving SHA-sum + minisig
+> generation into the release workflow (CI-side) is a v0.4.x item.
 
 ## 5. Post-Release Verification
 
 - [ ] `node scripts/verify-published-package.cjs X.Y.Z` — expect `✅ Package verification PASSED`
       (validates the embedded contract + runtime functions against the live package)
 - [ ] `npm view @3leaps/string-metrics-wasm version` — confirm it shows X.Y.Z
-- [ ] `git verify-tag vX.Y.Z` — re-confirm the signature (optionally on a fresh checkout)
+- [ ] `git verify-tag "$STRING_METRICS_WASM_RELEASE_KEY"` — re-confirm the signature
 - [ ] Confirm the GitHub Release exists with the vX.Y.Z notes
 
 ## Troubleshooting
@@ -149,8 +147,8 @@ The tag push already created a GitHub Release (with the package tarball). Remove
 the tag, then re-tag after fixing — otherwise a stale public release/asset is left behind:
 
 ```bash
-gh release delete "vX.Y.Z" --yes --cleanup-tag   # deletes the GitHub Release AND the remote tag
-git tag -d "vX.Y.Z"                               # delete the local tag
+gh release delete "$STRING_METRICS_WASM_RELEASE_KEY" --yes --cleanup-tag   # release + remote tag
+git tag -d "$STRING_METRICS_WASM_RELEASE_KEY"                              # local tag
 # fix on main, then re-run the signed-tag steps (section 3) and re-push
 ```
 
@@ -168,5 +166,5 @@ npm deprecate "@3leaps/string-metrics-wasm@X.Y.Z" "Use X.Y.(Z+1)"
 - [docs/publishing.md](docs/publishing.md) — expanded per-step publishing guide
 - [RELEASE_NOTES.md](RELEASE_NOTES.md) — recent release summaries
 - [CHANGELOG.md](CHANGELOG.md) — full version history
-- Pattern: fulmenhq/tsfulmen `RELEASE_CHECKLIST.md` (library release shape); 3 Leaps key materials
-  via `(maintainer-configured environment)`
+- Pattern: fulmenhq/tsfulmen `RELEASE_CHECKLIST.md` (library release shape). Signing key materials
+  are maintainer-managed out-of-band and are **not** referenced by path here.

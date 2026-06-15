@@ -1,5 +1,5 @@
 .PHONY: help bootstrap build test test-coverage clean version-check version-sync bump-patch bump-minor bump-major set-version
-.PHONY: quality format format-check lint lint-fix typecheck rust-fmt rust-clippy
+.PHONY: quality format format-check lint lint-fix typecheck rust-fmt rust-clippy doc-hygiene
 .PHONY: precommit prepush
 .PHONY: build-validator validate-fixtures
 
@@ -137,8 +137,11 @@ clean-all: clean
 	@echo "✅ Full clean complete"
 
 # Code quality targets
-quality: version-check format-check lint typecheck rust-fmt-check rust-clippy
+quality: version-check format-check lint typecheck rust-fmt-check rust-clippy doc-hygiene
 	@echo "✅ All quality checks passed"
+
+doc-hygiene:
+	@bash scripts/check-doc-hygiene.sh
 
 format: rust-fmt
 	@echo "Formatting TypeScript/JavaScript with Biome..."
@@ -191,6 +194,7 @@ precommit:
 	@$(MAKE) format-check
 	@$(MAKE) lint
 	@$(MAKE) typecheck
+	@$(MAKE) doc-hygiene
 	@$(MAKE) rust-fmt
 	@$(MAKE) rust-clippy
 	@$(MAKE) build

@@ -8,8 +8,9 @@ Instructions for maintainers releasing `@3leaps/string-metrics-wasm` to npm.
 - Member of @3leaps organization on npm with publish permissions
 - Clean working tree (commit or stash local changes)
 - Toolchain installed via `make bootstrap` (ensures `wasm-pack` 0.13.1 and npm deps)
-- `gpg` and `minisign` installed, and the **3 Leaps signing key** materials sourced
-  (`source (maintainer-configured environment)`) — release tags **must be GPG-signed**
+- `gpg` and `minisign` installed, and the release-signing environment variables exported (see
+  [RELEASE_CHECKLIST.md](../RELEASE_CHECKLIST.md) "Prerequisites" — variable names only;
+  maintainer-configured out-of-band). Release tags **must be GPG-signed**.
 
 ## Release Checklist
 
@@ -59,18 +60,17 @@ Instructions for maintainers releasing `@3leaps/string-metrics-wasm` to npm.
    npm publish --dry-run --access public
    ```
 
-9. **Create a signed tag locally** (don't push yet). Release tags must be **GPG-signed** with the 3
-   Leaps key:
+9. **Create a signed tag locally** (don't push yet). Release tags must be **GPG-signed**. This
+   assumes the release-signing environment variables are exported (see RELEASE_CHECKLIST.md):
 
    ```bash
    export GPG_TTY="$(tty)"
    gpg-connect-agent updatestartuptty /bye
-   source (maintainer-configured environment)
    export GNUPGHOME="$STRING_METRICS_WASM_GPG_HOMEDIR"
    git config user.signingkey "$STRING_METRICS_WASM_PGP_KEY_ID"
 
-   git tag -s vX.Y.Z -m "Release vX.Y.Z - brief description"
-   git verify-tag vX.Y.Z   # MUST show a good signature from the 3 Leaps Infosec Team key
+   git tag -s "$STRING_METRICS_WASM_RELEASE_KEY" -m "Release $STRING_METRICS_WASM_RELEASE_KEY - brief description"
+   git verify-tag "$STRING_METRICS_WASM_RELEASE_KEY"   # MUST show a good signature
    ```
 
 10. **Push commit and tag to remote**:
@@ -85,17 +85,15 @@ Instructions for maintainers releasing `@3leaps/string-metrics-wasm` to npm.
     ```
     **⚠️ IMPORTANT**: The `--access public` flag is **required** for scoped packages (@3leaps/...).
     Without it, npm defaults to private access, which requires a paid organization plan.
-13. **Sign the released artifact** (3 Leaps minisign key). Download the CI-attached tarball,
-    generate SHA256/512 checksums, sign them, and upload the sums + signatures to the release:
+13. **Sign the released artifact**. Download the CI-attached tarball, generate SHA256/512 checksums,
+    sign them with the minisign key, and upload the sums + signatures to the release:
     ```bash
-    source (maintainer-configured environment)
-    TARBALL="3leaps-string-metrics-wasm-X.Y.Z.tgz"
-    gh release download "vX.Y.Z" -p "$TARBALL"
-    shasum -a 256 "$TARBALL" > SHA256SUMS
-    shasum -a 512 "$TARBALL" > SHA512SUMS
+    gh release download "$STRING_METRICS_WASM_RELEASE_KEY" -p '3leaps-string-metrics-wasm-*.tgz'
+    shasum -a 256 3leaps-string-metrics-wasm-*.tgz > SHA256SUMS
+    shasum -a 512 3leaps-string-metrics-wasm-*.tgz > SHA512SUMS
     minisign -S -s "$STRING_METRICS_WASM_MINISIGN_KEY" -m SHA256SUMS
     minisign -S -s "$STRING_METRICS_WASM_MINISIGN_KEY" -m SHA512SUMS
-    gh release upload "vX.Y.Z" SHA256SUMS SHA256SUMS.minisig SHA512SUMS SHA512SUMS.minisig
+    gh release upload "$STRING_METRICS_WASM_RELEASE_KEY" SHA256SUMS SHA256SUMS.minisig SHA512SUMS SHA512SUMS.minisig
     ```
     (CI-side artifact signing is a v0.4.x item; today the checksums + minisig are produced
     manually.)
