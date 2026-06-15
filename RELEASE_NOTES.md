@@ -1,93 +1,47 @@
 # Release Notes
 
-This file contains the **last 3 releases** in reverse chronological order. For older releases, see
-the [release archive](docs/releases/).
+This file contains release notes for the most recent release in reverse chronological order. For the
+complete release history, see the [CHANGELOG](CHANGELOG.md) or the [docs/releases/](docs/releases/)
+directory.
 
 ---
 
-## v0.2.0 (In Progress)
+## v0.3.9 (2026-06-15)
 
-**Status:** Development (Phase 0 complete, Phase 1 pending) **Target Release Date:** TBD
+**Standalone-Binary Packaging Fix, Smaller Package, and Toolchain Modernization**
 
-### Highlights
+v0.3.9 is a packaging and maintenance release. It fixes a startup crash when the library is bundled
+into standalone compiled binaries, substantially shrinks the published npm package, and modernizes
+the test toolchain and CI. There are **no public API changes** — all exports keep their existing
+synchronous signatures and behavior, and metric results are unchanged.
 
-- 🚀 **Migrated from strsim-rs to rapidfuzz-rs** for 1.9x–2.6x performance gains
-- ⚡ **Massive performance improvements:** All core functions 93-159% faster
-- 📦 **Bundle size:** +51 KB (+29%, within ≤50% tolerance)
-- ✅ **100% API compatibility:** No breaking changes to function signatures
-- 🔧 **Ecosystem alignment:** Matches pyfulmen/gofulmen/tsfulmen semantics
+### Standalone-Binary & Bundler Packaging Fix
 
-### Performance Highlights
+The WASM binary is now embedded (base64) in the published JavaScript and initialized **lazily on
+first use**, replacing the eager top-level `readFileSync` of a sibling `.wasm` asset. This fixes
+startup crashes (`ENOENT`) when the library is bundled into standalone compiled binaries (e.g.
+`bun build --compile`), where the asset path is rewritten but not embedded. Importing the package is
+now side-effect-free, and there is no runtime filesystem read on any runtime.
 
-| Function               | v0.1.0        | v0.2.0        | Improvement |
-| ---------------------- | ------------- | ------------- | ----------- |
-| levenshtein            | 1.54M ops/sec | 3.27M ops/sec | +112%       |
-| normalized_levenshtein | 1.61M ops/sec | 4.17M ops/sec | +159%       |
-| damerau_levenshtein    | 773K ops/sec  | 1.63M ops/sec | +111%       |
-| jaro                   | 1.92M ops/sec | 3.72M ops/sec | +94%        |
+### Smaller Published Package
 
-### Migration
+The npm package shrank from ~545 kB to ~180 kB packed. The generated embedded-WASM constant is typed
+as `string` (eliminating a ~300 kB inferred-literal `.d.ts`), and two now-redundant copies of the
+binary are no longer published (the generated `src/wasm-inline.ts` source blob and the raw
+`pkg/web/*.wasm`); the bytes ship embedded in `dist/wasm-inline.js`.
 
-**No code changes required** for existing v0.1.0 users. If you need the exact strsim-rs behavior,
-pin to `"string-metrics-wasm": "0.1.0"` in package.json.
+### Toolchain & CI Modernization
 
-### What's Next
+Upgraded the test stack to **Vitest 4** (with migrated coverage thresholds), bumped `@types/node` to
+v24 and refreshed routine dev dependencies (Biome 2.5, Prettier, TypeScript, js-yaml; `wasm-pack`
+held at 0.13.x), and modernized CI: the test matrix runs on **Node.js 22 and 24**, GitHub Actions
+moved off the deprecated Node 20 runtime, and `wasm-pack` is installed directly via `cargo` rather
+than a third-party action. Added unified-API metric tests to keep coverage above 90% under Vitest
+4's stricter measurement.
 
-Phase 1 will add token-based metrics (`ratio`, `partial_ratio`, `token_sort_ratio`, etc.) and
-process helpers.
-
-[📄 Full Release Notes →](docs/releases/v0.2.0.md)
-
----
-
-## v0.1.0
-
-**Release Date:** 2025-10-29 **Status:** Stable
-
-### Highlights
-
-- 🎉 **Initial release** of string-metrics-wasm
-- 📊 8 core string similarity metrics via strsim-rs WASM bindings
-- 🧩 High-level Suggestions API for "did you mean?" functionality
-- 🔧 Similarity validator CLI with rapidfuzz-rs for fixture generation
-- ✅ 47/47 TypeScript tests + 46/46 validator tests passing
-
-### Core Features
-
-- **Metrics:** Levenshtein, Damerau-Levenshtein (OSA & unrestricted), Jaro, Jaro-Winkler
-- **Extended features:** Substring similarity, normalization presets
-  (none/minimal/default/aggressive)
-- **Suggestions API:** Multi-metric support, prefix bonuses, smart ranking, tie-break preservation
-
-### Technical Details
-
-- WASM Core: strsim-rs 0.11.x
-- Validator: rapidfuzz-rs 0.5.0 (future-proofing for v0.2.0)
-- Runtime: TypeScript with Bun
-- Bundle size: 174 KB WASM + 11 KB JS glue
-
-[📄 Full Release Notes →](docs/releases/v0.1.0.md)
+See [docs/releases/v0.3.9.md](docs/releases/v0.3.9.md) for the complete release notes.
 
 ---
 
-## Archive Policy
-
-This file maintains the **last 3 releases** chronologically. Older release notes are archived in the
-[docs/releases/](docs/releases/) directory and remain accessible via git tags.
-
-**Archive contents:**
-
-- Detailed release notes for all versions
-- Migration guides
-- Breaking change documentation
-- Performance benchmarks
-- Known limitations
-
-**Tags:**
-
-- `v0.1.0` - Initial strsim-based release (2025-10-29)
-- `v0.2.0` - RapidFuzz migration (TBD)
-
----
-
-**For complete history:** `git tag -l` or browse [docs/releases/](docs/releases/)
+For v0.3.8 and earlier release notes, see the [docs/releases/](docs/releases/) directory or the
+[CHANGELOG](CHANGELOG.md).

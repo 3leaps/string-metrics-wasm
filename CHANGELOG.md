@@ -7,6 +7,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.3.9] - 2026-06-15
+
 ### Fixed
 
 - **Standalone-binary / bundler packaging**
@@ -46,6 +48,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   - Added unified-API coverage for every `score()`, `distance()`, and `suggest()` metric arm
     (camelCase and snake_case aliases) plus unknown-metric error paths, restoring 90%+ coverage
     under Vitest 4's AST-aware measurement.
+
+[0.3.9]: https://github.com/3leaps/string-metrics-wasm/compare/v0.3.8...v0.3.9
 
 ## [0.3.8] - 2025-10-31
 

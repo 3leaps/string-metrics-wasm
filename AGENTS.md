@@ -87,7 +87,7 @@ Optional but recommended:
 - **Quality Gates First**: Run `make quality` before commits to ensure formatting and linting pass.
 - **Version Sync**: Use `make bump-patch|minor|major` or `make set-version VERSION=x.y.z` to keep
   Cargo.toml and package.json synchronized.
-- **Test Thoroughly**: Run `make test` before commits. This project has 119+ unit tests and 80+
+- **Test Thoroughly**: Run `make test` before commits. This project has 176+ unit tests and 127+
   fixture cases - they must all pass. See "Test Requirements" below for details.
 - **Validate Fixtures**: Run `make validate-fixtures` after modifying test fixtures to ensure
   accuracy against rapidfuzz-rs canonical implementation.
@@ -127,7 +127,7 @@ Optional but recommended:
   generated and gitignored.
 - **NEVER Commit .plans/**: The `.plans/` directory is gitignored for local planning only. Do not
   use `-f` to override.
-- **NEVER Skip Tests**: All 119+ tests must pass. Do not commit failing tests or skip test runs.
+- **NEVER Skip Tests**: All 176+ tests must pass. Do not commit failing tests or skip test runs.
   Using `.skip()` or `.todo()` on test cases requires explicit maintainer approval. See "Test
   Requirements" below.
 - **NEVER Lower Coverage Thresholds**: The vitest.config.ts defines minimum coverage thresholds. Do
@@ -229,8 +229,8 @@ etc. The Makefile handles the complexity of coordinating multiple build systems 
 
 **100% Test Pass Rate (Mandatory)**:
 
-- All 119+ unit tests MUST pass before any commit
-- All 80+ YAML fixture test cases MUST pass
+- All 176+ unit tests MUST pass before any commit
+- All 127+ YAML fixture test cases MUST pass
 - Zero tolerance for failing tests in commits
 - Test skips (`.skip()`, `.todo()`, `it.only()`) require explicit maintainer approval
 
@@ -293,7 +293,7 @@ npm run build:ts            # Build only TypeScript
 
 # Quality & Testing
 make quality                # Format check + lint (Biome, Prettier, rustfmt, clippy)
-make test                   # Run test suite (119+ tests)
+make test                   # Run test suite (176+ tests)
 make test-coverage          # Run tests with coverage report
 make format                 # Auto-format all code
 make lint                   # Lint TypeScript
@@ -319,7 +319,7 @@ make clean                  # Remove build artifacts
 Before committing ANY changes:
 
 1. ✅ Run `make quality` - all checks must pass
-2. ✅ Run `make test` - all 119+ tests must pass (100% pass rate required)
+2. ✅ Run `make test` - all 176+ tests must pass (100% pass rate required)
 3. ✅ Run `make test-coverage` - verify coverage meets thresholds (optional but recommended)
 4. ✅ Run `make validate-fixtures` if you touched fixtures
 5. ✅ Run `make version-check` if you touched version files
@@ -398,8 +398,8 @@ git push origin main    # ❌ Requires approval
 
 ### Test Coverage
 
-- **119+ unit tests** covering all functions
-- **80+ YAML fixture test cases** for reproducibility
+- **176+ unit tests** covering all functions
+- **127+ YAML fixture test cases** for reproducibility
 - **100% regression-free** target across releases
 - Fixtures validated against canonical rapidfuzz-rs implementation
 
@@ -486,7 +486,8 @@ When working on string-metrics-wasm, remember:
 
 ---
 
-**Last Updated**: 2025-10-31 **Status**: v0.3.4 - RapidFuzz-aligned API with TypeScript extensions
+**Last Updated**: 2026-06-15 **Status**: v0.3.9 - Lazy/embedded WASM (standalone-binary support);
+RapidFuzz-aligned API with TypeScript extensions
 
 _This guide is for AI developers working on string-metrics-wasm. For human contributor information,
 see CONTRIBUTING.md (when available) or contact @3leapsdave._
