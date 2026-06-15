@@ -35,7 +35,10 @@ publishes **manually**:
 
 - [ ] `git status` is clean (all release content merged to `main`)
 - [ ] Set the new version — `make set-version VERSION=X.Y.Z` (keeps `package.json` + `Cargo.toml` in
-      sync; never edit version by hand)
+      sync; never edit version by hand). The workspace `Cargo.lock` bumps on the next `cargo`
+      build/check, not by `set-version` — run `make build` (or `make precommit`) and **stage the
+      updated `Cargo.lock`** with the prep commit so the tree stays clean (`make prepush` enforces
+      this).
 - [ ] `CHANGELOG.md`: move `[Unreleased]` → `## [X.Y.Z] - YYYY-MM-DD` and add the compare link
 - [ ] `RELEASE_NOTES.md`: update the top entry to vX.Y.Z
 - [ ] `docs/releases/vX.Y.Z.md`: create per-version notes

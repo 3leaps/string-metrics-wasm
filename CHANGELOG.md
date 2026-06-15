@@ -7,6 +7,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.3.10] - 2026-06-15
+
 ### Changed
 
 - **Release process**
@@ -21,6 +23,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
     per-version `docs/releases/vX.Y.Z.md` notes, fails on a missing tarball, and uses those notes as
     the GitHub Release body. (Full OIDC automation and CI-side artifact signing remain deferred to a
     later hardening pass.)
+
+[0.3.10]: https://github.com/3leaps/string-metrics-wasm/compare/v0.3.9...v0.3.10
 
 ## [0.3.9] - 2026-06-15
 

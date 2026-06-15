@@ -1,8 +1,23 @@
 # Release Notes
 
-This file contains release notes for the most recent release in reverse chronological order. For the
-complete release history, see the [CHANGELOG](CHANGELOG.md) or the [docs/releases/](docs/releases/)
-directory.
+This file contains release notes for the most recent releases in reverse chronological order. For
+the complete release history, see the [CHANGELOG](CHANGELOG.md) or the
+[docs/releases/](docs/releases/) directory.
+
+---
+
+## v0.3.10 (2026-06-15)
+
+**Release-Process Hardening — Signed Tags, Release Checklist, and Signed Artifacts**
+
+v0.3.10 is a release-process release. It establishes **GPG-signed release tags**, an authoritative
+`RELEASE_CHECKLIST.md`, **minisign-signed** release artifacts (SHA256/512 checksums), and a hardened
+CI release job (tag↔version guard, required per-version notes, notes used as the release body).
+There are **no library code, public API, runtime, or fixture changes** — the published package is
+functionally identical to v0.3.9. (Full OIDC publishing and CI-side artifact signing are deferred to
+a later v0.4.x pass; npm publishing stays manual for now.)
+
+See [docs/releases/v0.3.10.md](docs/releases/v0.3.10.md) for the complete release notes.
 
 ---
 
