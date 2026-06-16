@@ -25,8 +25,9 @@ publishes **manually**:
 - [ ] `gpg` and `minisign` installed (`brew install gnupg minisign`)
 - [ ] The release-signing **environment variables** below are exported in your shell. How they are
       configured is a maintainer concern handled out-of-band — this checklist references variable
-      **names only** and never their values or locations:
-  - `STRING_METRICS_WASM_RELEASE_KEY` — the tag for this release (e.g. `v0.3.10`)
+      **names only** and never their values or locations. The release tag is derived from
+      `package.json` (`vX.Y.Z`), so no tag variable is needed (set `STRING_METRICS_WASM_RELEASE_TAG`
+      only to override):
   - `STRING_METRICS_WASM_GPG_HOMEDIR` — GnuPG home containing the signing key
   - `STRING_METRICS_WASM_PGP_KEY_ID` — the GPG signing key id
   - `STRING_METRICS_WASM_MINISIGN_KEY` / `STRING_METRICS_WASM_MINISIGN_PUB` — minisign secret/public
@@ -60,42 +61,23 @@ publishes **manually**:
       packed)
 - [ ] `npm publish --dry-run --access public` — runs `prepublishOnly` (`make quality && make build`)
 
-## 3. Tagging (SIGNED — required)
+## 3. Tag (SIGNED — required)
 
-### Step 1 — Prepare GPG
+With the signing environment set (Prerequisites), the tag is derived from `package.json` (`vX.Y.Z`):
 
 ```bash
-export GPG_TTY="$(tty)"
-gpg-connect-agent updatestartuptty /bye
+make release-guard-tag-version   # sanity: the version that will be tagged
+make release-tag                 # creates + verifies a GPG-signed tag (prompts for the key passphrase)
 ```
 
-### Step 2 — Point git at the signing key
+`make release-tag` runs the guards (clean tree, on `main`, semver, tag-not-existing), signs the tag,
+and verifies the signature. If verification fails, fix the key setup (see Troubleshooting) and
+re-tag. Then push:
 
 ```bash
-export GNUPGHOME="$STRING_METRICS_WASM_GPG_HOMEDIR"
-git config user.signingkey "$STRING_METRICS_WASM_PGP_KEY_ID"
-```
-
-### Step 3 — Create the signed tag (local only — do not push yet)
-
-```bash
-git tag -s "$STRING_METRICS_WASM_RELEASE_KEY" -m "Release $STRING_METRICS_WASM_RELEASE_KEY - <one-line summary>"
-```
-
-### Step 4 — Verify the signature locally (MUST pass)
-
-```bash
-git verify-tag "$STRING_METRICS_WASM_RELEASE_KEY"
-```
-
-Expect a **Good signature** from the signing key. If it fails, do not push — fix the key setup (see
-Troubleshooting) and re-tag.
-
-### Step 5 — Push main and the tag
-
-```bash
+TAG="v$(node -p "require('./package.json').version")"
 git push origin main
-git push origin "$STRING_METRICS_WASM_RELEASE_KEY"
+git push origin "$TAG"
 ```
 
 > **Point of no return for the GitHub release**: the tag push triggers `ci.yml`'s release job, which
@@ -103,32 +85,26 @@ git push origin "$STRING_METRICS_WASM_RELEASE_KEY"
 
 ## 4. Publish + Sign Artifacts (manual)
 
-- [ ] Wait for the tag's CI run (Validate + matrix + **Create Release**) to be green — CI has now
+- [ ] Wait for the tag's CI run (Validate + matrix + **Create Release**) to be green — CI has
       created the GitHub Release with the package tarball attached and the per-version notes as the
       body
 - [ ] Publish to npm — `npm publish --access public`
-- [ ] Sign the released artifact and attach the checksums + signatures to the GitHub Release.
-      Download the **CI-attached** tarball first so the checksums cover the exact released bytes:
+- [ ] Sign the released artifact:
 
 ```bash
-gh release download "$STRING_METRICS_WASM_RELEASE_KEY" -p '3leaps-string-metrics-wasm-*.tgz'
-shasum -a 256 3leaps-string-metrics-wasm-*.tgz > SHA256SUMS
-shasum -a 512 3leaps-string-metrics-wasm-*.tgz > SHA512SUMS
-minisign -S -s "$STRING_METRICS_WASM_MINISIGN_KEY" -m SHA256SUMS   # → SHA256SUMS.minisig
-minisign -S -s "$STRING_METRICS_WASM_MINISIGN_KEY" -m SHA512SUMS   # → SHA512SUMS.minisig
-gh release upload "$STRING_METRICS_WASM_RELEASE_KEY" SHA256SUMS SHA256SUMS.minisig SHA512SUMS SHA512SUMS.minisig
+make release-sign   # downloads the released tarball, generates + minisigns SHA256/512SUMS, uploads them
 ```
 
 > Verifiers use the minisign public key in `$STRING_METRICS_WASM_MINISIGN_PUB`
-> (`minisign -Vm SHA256SUMS -p "$STRING_METRICS_WASM_MINISIGN_PUB"`). Moving SHA-sum + minisig
-> generation into the release workflow (CI-side) is a v0.4.x item.
+> (`minisign -Vm SHA256SUMS -p "$STRING_METRICS_WASM_MINISIGN_PUB"`). Moving artifact signing
+> CI-side is a v0.4.x item.
 
 ## 5. Post-Release Verification
 
 - [ ] `node scripts/verify-published-package.cjs X.Y.Z` — expect `✅ Package verification PASSED`
       (validates the embedded contract + runtime functions against the live package)
 - [ ] `npm view @3leaps/string-metrics-wasm version` — confirm it shows X.Y.Z
-- [ ] `git verify-tag "$STRING_METRICS_WASM_RELEASE_KEY"` — re-confirm the signature
+- [ ] `make release-verify-tag` — re-confirm the tag signature
 - [ ] Confirm the GitHub Release exists with the vX.Y.Z notes
 
 ## Troubleshooting
@@ -147,8 +123,9 @@ The tag push already created a GitHub Release (with the package tarball). Remove
 the tag, then re-tag after fixing — otherwise a stale public release/asset is left behind:
 
 ```bash
-gh release delete "$STRING_METRICS_WASM_RELEASE_KEY" --yes --cleanup-tag   # release + remote tag
-git tag -d "$STRING_METRICS_WASM_RELEASE_KEY"                              # local tag
+TAG="v$(node -p "require('./package.json').version")"
+gh release delete "$TAG" --yes --cleanup-tag   # release + remote tag
+git tag -d "$TAG"                               # local tag
 # fix on main, then re-run the signed-tag steps (section 3) and re-push
 ```
 

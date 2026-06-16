@@ -62,3 +62,9 @@ temp/
 # Uncomment if you prefer not to commit locks:
 # package-lock.json
 # Cargo.lock
+
+# Release artifacts (npm pack output + signing files; generated, never committed)
+*.tgz
+SHA256SUMS*
+SHA512SUMS*
+*.minisig

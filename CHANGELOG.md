@@ -7,6 +7,21 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.3.11] - 2026-06-16
+
+### Added
+
+- **Standardized release Make targets**
+  - Added `make release-check`, `release-guard-tag-version`, `release-tag`, `release-verify-tag`,
+    and `release-sign` (thin wrappers over `scripts/release-*.sh`), matching the 3 Leaps library
+    release pattern. `make release-tag` creates + verifies a GPG-signed tag (with guards for a clean
+    tree, `main` branch, semver, and tag↔`package.json` agreement); `make release-sign` downloads
+    the released tarball, generates `SHA256SUMS`/`SHA512SUMS`, minisigns them, and uploads them to
+    the GitHub Release. `RELEASE_CHECKLIST.md` and `docs/publishing.md` now drive the signed tag +
+    artifact signing through these targets instead of raw commands. No library/runtime/API change.
+
+[0.3.11]: https://github.com/3leaps/string-metrics-wasm/compare/v0.3.10...v0.3.11
+
 ## [0.3.10] - 2026-06-15
 
 ### Changed

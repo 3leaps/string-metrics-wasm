@@ -493,8 +493,8 @@ When working on string-metrics-wasm, remember:
 
 ---
 
-**Last Updated**: 2026-06-15 **Status**: v0.3.10 - Lazy/embedded WASM (standalone-binary support),
-signed releases; RapidFuzz-aligned API with TypeScript extensions
+**Last Updated**: 2026-06-16 **Status**: v0.3.11 - Lazy/embedded WASM (standalone-binary support),
+signed releases via `make release-*`; RapidFuzz-aligned API with TypeScript extensions
 
 _This guide is for AI developers working on string-metrics-wasm. For human contributor information,
 see CONTRIBUTING.md (when available) or contact @3leapsdave._
