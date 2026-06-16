@@ -2,6 +2,7 @@
 .PHONY: quality format format-check lint lint-fix typecheck rust-fmt rust-clippy doc-hygiene
 .PHONY: precommit prepush
 .PHONY: build-validator validate-fixtures
+.PHONY: release-check release-guard-tag-version release-tag release-verify-tag release-sign
 
 # Default target
 help:
@@ -41,6 +42,13 @@ help:
 	@echo "  make bump-minor     - Bump minor version (0.1.0 -> 0.2.0)"
 	@echo "  make bump-major     - Bump major version (0.1.0 -> 1.0.0)"
 	@echo "  make set-version VERSION=x.y.z - Set explicit version"
+	@echo ""
+	@echo "Release (see RELEASE_CHECKLIST.md):"
+	@echo "  make release-check            - Validate release readiness (quality + tests)"
+	@echo "  make release-guard-tag-version - Guard: git tag matches package.json version"
+	@echo "  make release-tag              - Create + verify a GPG-signed release tag"
+	@echo "  make release-verify-tag       - Verify the signed release tag"
+	@echo "  make release-sign             - Sign released artifact checksums (minisign) + upload"
 
 bootstrap:
 	@echo "Ensuring Rust toolchain is available..."
@@ -111,6 +119,22 @@ set-version:
 	@npm version $(VERSION) --no-git-tag-version
 	@$(MAKE) version-sync
 	@echo "✅ Set version to $(VERSION)"
+
+# Release targets (see RELEASE_CHECKLIST.md)
+release-check: quality test
+	@echo "✅ Release checks passed"
+
+release-guard-tag-version:
+	@bash scripts/release-guard-tag-version.sh
+
+release-tag:
+	@bash scripts/release-tag.sh
+
+release-verify-tag:
+	@bash scripts/release-verify-tag.sh
+
+release-sign:
+	@bash scripts/release-sign.sh
 
 # Build targets
 build: version-check

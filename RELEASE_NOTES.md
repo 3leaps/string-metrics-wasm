@@ -6,6 +6,19 @@ the complete release history, see the [CHANGELOG](CHANGELOG.md) or the
 
 ---
 
+## v0.3.11 (2026-06-16)
+
+**Standardized Release Make Targets**
+
+v0.3.11 is a release-tooling release. It adds the standard 3 Leaps library `make release-*` targets
+(`release-check`, `release-guard-tag-version`, `release-tag`, `release-verify-tag`, `release-sign`)
+so the signed-tag and artifact-signing steps run as named Make targets instead of raw commands. **No
+library code, public API, runtime, or fixture changes** — functionally identical to v0.3.10.
+
+See [docs/releases/v0.3.11.md](docs/releases/v0.3.11.md) for the complete release notes.
+
+---
+
 ## v0.3.10 (2026-06-15)
 
 **Release-Process Hardening — Signed Tags, Release Checklist, and Signed Artifacts**
